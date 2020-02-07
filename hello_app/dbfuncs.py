@@ -51,6 +51,8 @@ def db_Invitee_idFor(email):
         if not result is None:
             result = int(result.id)
         return result
+# when returning object on a closed session, could try session.expire_on_commit = False
+# and probably session.expunge(object)
 
 def db_User_add(user):
     with session_scope() as session:

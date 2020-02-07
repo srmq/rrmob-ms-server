@@ -152,7 +152,7 @@ def signup():
 
     db_User_add(new_user)
 
-    return jsonify({"msg:": "Ok"}), 200
+    return jsonify({"msg:": "Success"}), 200
 
 @app.route('/addinvitee', methods=['POST'])
 def add_invitee():
