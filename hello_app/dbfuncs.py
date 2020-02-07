@@ -5,10 +5,9 @@ from sqlalchemy.orm import sessionmaker
 import os
 from contextlib import contextmanager
 
-engine = _get_db_engine()
-Session = sessionmaker(bind=engine)
-
-
+def _get_db_URL():
+    db_URL = os.environ.get('DATABASE_URL', '')
+    return db_URL
 
 def _get_db_engine():
     db_URL = _get_db_URL()
@@ -17,9 +16,8 @@ def _get_db_engine():
 
     return create_engine(db_URL, echo=True)
 
-def _get_db_URL():
-    db_URL = os.environ.get('DATABASE_URL', '')
-    return db_URL
+engine = _get_db_engine()
+Session = sessionmaker(bind=engine)
 
 def create_tables():
     Base.metadata.create_all(engine)
