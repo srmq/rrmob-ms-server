@@ -86,3 +86,5 @@ def signup():
         return jsonify({"msg": "Password parameter should have at least one digit"}), 400
     elif re.search(r"[A-Z]", password) is None and re.search(r"[a-z]", password) is None:
         return jsonify({"msg": "Password parameter should have at least one letter"}), 400        
+
+    return jsonify({"msg:": "Ok"}), 200
