@@ -45,9 +45,11 @@ def db_Invitee_exists(email):
     with session_scope() as session:
         return session.query(Invitee).filter(Invitee.email == email).count() > 0
 
-def db_Invitee_get(email):
+def db_Invitee_idFor(email):
     with session_scope() as session:
         result = session.query(Invitee).filter(Invitee.email == email).first()
+        if not result is None:
+            result = int(result.id)
         return result
 
 def db_User_add(user):

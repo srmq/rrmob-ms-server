@@ -6,7 +6,7 @@ from flask import (
 from . import app
 from .dbfuncs import (
     create_tables, drop_tables, db_User_exists, db_User_add,
-    db_Invitee_get, db_Invitee_add
+    db_Invitee_idFor, db_Invitee_add
 )
 from .dbclasses import User, Invitee
 from spotipy.oauth2 import SpotifyOAuth
@@ -141,12 +141,13 @@ def signup():
     if db_User_exists(emailaddr):
         return jsonify({"msg": "User with given email already exists"}), 400
 
-    invitee = db_Invitee_get(emailaddr)
-    if invitee is None:
+    inviteeId = db_Invitee_idFor(emailaddr)
+    if inviteeId is None:
         return jsonify({"msg": "Given email is not on invitee list"}), 400
         
     user_salt = uuid.uuid4().hex
-    new_user = User(fullname = fullname, email = emailaddr, invitee_id = invitee.id, pass_hash = hashlib.sha512(base64.b64encode(password) + ":" + user_salt).hexdigest(), pass_salt = user_salt)
+    user_pass_hash = hashlib.sha512(base64.b64encode(password) + ":" + user_salt).hexdigest()
+    new_user = User(fullname = fullname, email = emailaddr, invitee_id = invitee.id, pass_hash = user_pass_hash, pass_salt = user_salt)
 
     db_User_add(new_user)
 
