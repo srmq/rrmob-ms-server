@@ -1,9 +1,14 @@
 from datetime import datetime
-from flask import Flask, redirect, request, render_template
+from flask import (
+    Flask, redirect, request, render_template,
+    jsonify
+)
 from . import app
 from spotipy.oauth2 import SpotifyOAuth
 import os
 import uuid
+from email.utils import parseaddr
+import re
 
 @app.route("/")
 def home():
@@ -54,3 +59,30 @@ def login():
     sp_oauth = SpotifyOAuth(client_id, client_secret, redirect_uri, state=my_state, scope=my_scopes)
     auth_url = sp_oauth.get_authorize_url()
     return redirect(auth_url)
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    if not request.is_json:
+        return jsonify({"msg": "Malformed request, expecting JSON"}), 400
+    
+    fullname = request.json.get('fullname', None)
+    if not fullname:
+        return jsonify({"msg": "Missing full name parameter"}), 400
+    elif len(fullname) < 2:
+        return jsonify({"msg": "Full name parameter is too short"}), 400
+
+    emailaddr = request.json.get('emailaddr', None)
+    if not emailaddr:
+        return jsonify({"msg": "Missing email address parameter"}), 400
+    elif not '@' in parseaddr(emailaddr)[1]:
+        return jsonify({"msg": "Malformed email address"}), 400
+
+    password = request.json.get('password', None)
+    if not password:
+        return jsonify({"msg": "Missing password parameter"}), 400
+    elif len(password) < 6:
+        return jsonify({"msg": "Password parameter should have at least 6 characters"}), 400
+    elif re.search(r"\d", password) is None:
+        return jsonify({"msg": "Password parameter should have at least one digit"}), 400
+    elif re.search(r"[A-Z]", password) is None and re.search(r"[a-z]", password) is None:
+        return jsonify({"msg": "Password parameter should have at least one letter"}), 400        
