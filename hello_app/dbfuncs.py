@@ -53,3 +53,7 @@ def db_Invitee_get(email):
 def db_User_add(user):
     with session_scope() as session:
         session.add(user)
+
+def db_Invitee_add(invitee):
+    with session_scope() as session:
+        session.add(invitee)

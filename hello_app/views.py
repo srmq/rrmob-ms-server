@@ -6,7 +6,7 @@ from flask import (
 from . import app
 from .dbfuncs import (
     create_tables, drop_tables, db_User_exists, db_User_add,
-    db_Invitee_get
+    db_Invitee_get, db_Invitee_add
 )
 from .dbclasses import User, Invitee
 from spotipy.oauth2 import SpotifyOAuth
@@ -151,3 +151,32 @@ def signup():
     db_User_add(new_user)
 
     return jsonify({"msg:": "Ok"}), 200
+
+@app.route('/addinvitee', methods=['POST'])
+def add_invitee():
+    if not request.is_json:
+        return jsonify({"msg": "Malformed request, expecting JSON"}), 400
+    root_pass = os.environ.get('ROOT_PASS', '')
+    if not root_pass:
+        return jsonify({"msg": "Misconfiguration error. Missing password?"}), 500
+    elif len(root_pass) < 6:
+        return jsonify({"msg": "Misconfiguration error. Root password is too short?"}), 500
+    rcvd_pass = request.json.get('rootpass', None)
+    if not rcvd_pass:
+        return jsonify({"msg": "Missing root password parameter"}), 400
+    if not rcvd_pass == root_pass:
+        return jsonify({"msg": "Invalid root password received"}), 401
+    emailaddr = request.json.get('email', None)
+    if not emailaddr:
+        return jsonify({"msg": "Missing email parameter"}), 400
+    elif not '@' in parseaddr(emailaddr)[1]:
+        return jsonify({"msg": "Malformed email address"}), 400
+
+    try:
+        invitee = Invitee(email = emailaddr)
+        db_Invitee_add(invitee)
+    except Exception as e:
+        msg = "An Error ocurred: " + e
+        return jsonify({"msg": msg}), 500
+    else:
+        return jsonify({"msg": "Success"}), 200
