@@ -147,7 +147,7 @@ def signup():
         
     user_salt = uuid.uuid4().hex
     user_pass_hash = hashlib.sha512(base64.b64encode(password) + ":" + user_salt).hexdigest()
-    new_user = User(fullname = fullname, email = emailaddr, invitee_id = invitee.id, pass_hash = user_pass_hash, pass_salt = user_salt)
+    new_user = User(fullname = fullname, email = emailaddr, invitee_id = inviteeId, pass_hash = user_pass_hash, pass_salt = user_salt)
 
     db_User_add(new_user)
 
