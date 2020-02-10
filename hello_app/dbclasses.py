@@ -38,5 +38,5 @@ class GMailAuth(Base):
     redirect_uri = Column(String(1024))
     scopes = Column(JSONB)
     state = Column(Text, unique = True, index=True)
-    stateIssuedAt = Column(DateTime)
+    state_issued_at = Column(DateTime)
     credentials = Column(JSONB)
