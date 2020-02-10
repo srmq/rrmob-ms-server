@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Boolean
+from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, Text, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import JSONB
 
@@ -28,3 +28,15 @@ class Invitee(Base):
 
     def __repr__(self):
         return "{\"id\": %s, \"email\" = %s}" % (self.id, self.email)
+
+class GMailAuth(Base):
+    __tablename__ = 'gmailauth'
+    id = Column('id', Integer, primary_key=True)
+    email = Column(String(320), nullable=False, unique=True, index=True)
+    fullname = Column(String(256), nullable=False)
+    client_secrets = Column(JSONB)
+    redirect_uri = Column(String(1024))
+    scopes = Column(JSONB)
+    state = Column(Text, unique = True, index=True)
+    stateIssuedAt = Column(DateTime)
+    credentials = Column(JSONB)

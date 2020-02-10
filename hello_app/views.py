@@ -6,7 +6,7 @@ from flask import (
 from . import app
 from .dbfuncs import (
     create_tables, drop_tables, db_User_exists, db_User_add,
-    db_Invitee_idFor, db_Invitee_add
+    db_Invitee_idFor, db_Invitee_add, db_put_gmail_send_auth
 )
 from .dbclasses import User, Invitee
 from spotipy.oauth2 import SpotifyOAuth
@@ -142,21 +142,75 @@ def signup():
     elif re.search(r"[A-Z]", password) is None and re.search(r"[a-z]", password) is None:
         return jsonify({"msg": "Password parameter should have at least one letter"}), 400
 
-    if db_User_exists(emailaddr):
-        return jsonify({"msg": "User with given email already exists"}), 400
+    try:
+        if db_User_exists(emailaddr):
+            return jsonify({"msg": "User with given email already exists"}), 400
 
-    inviteeId = db_Invitee_idFor(emailaddr)
-    if inviteeId is None:
-        return jsonify({"msg": "Given email is not on invitee list"}), 400
+        inviteeId = db_Invitee_idFor(emailaddr)
+        if inviteeId is None:
+            return jsonify({"msg": "Given email is not on invitee list"}), 400
+            
+        user_salt = uuid.uuid4().hex
         
-    user_salt = uuid.uuid4().hex
-    
-    user_pass_hash = hashlib.sha512(base64.b64encode((password + ":" + user_salt).encode())).hexdigest()
-    new_user = User(fullname = fullname, email = emailaddr, invitee_id = inviteeId, pass_hash = user_pass_hash, pass_salt = user_salt)
+        user_pass_hash = hashlib.sha512(base64.b64encode((password + ":" + user_salt).encode())).hexdigest()
+        new_user = User(fullname = fullname, email = emailaddr, invitee_id = inviteeId, pass_hash = user_pass_hash, pass_salt = user_salt)
 
-    db_User_add(new_user)
+        db_User_add(new_user)
+    except Exception as e:
+        msg = "An Exception ocurred: " + e
+        return jsonify({"msg": msg}), 500
+    else:
+        return jsonify({"msg:": "Success"}), 200
 
-    return jsonify({"msg:": "Success"}), 200
+@app.route('/putgmailsendauth', methods=['PUT'])
+def put_gmail_send_auth():
+    if not request.is_json:
+        return jsonify({"msg": "Malformed request, expecting JSON"}), 400
+
+    root_pass = os.environ.get('ROOT_PASS', '')
+    if not root_pass:
+        return jsonify({"msg": "Misconfiguration error. Missing password?"}), 500
+    elif len(root_pass) < 6:
+        return jsonify({"msg": "Misconfiguration error. Root password is too short?"}), 500
+
+    rcvd_pass = request.json.get('rootpass', None)
+    if not rcvd_pass:
+        return jsonify({"msg": "Missing root password parameter"}), 400
+    if not rcvd_pass == root_pass:
+        return jsonify({"msg": "Invalid root password received"}), 401
+
+    emailaddr = request.json.get('email', None)
+    if not emailaddr:
+        return jsonify({"msg": "Missing email parameter"}), 400
+    elif not '@' in parseaddr(emailaddr)[1]:
+        return jsonify({"msg": "Malformed email address"}), 400
+
+    fullname = request.json.get('fullname', None)
+    if not fullname:
+        return jsonify({"msg": "Missing full name parameter"}), 400
+    elif len(fullname) < 2:
+        return jsonify({"msg": "Full name parameter is too short"}), 400
+
+    client_secrets = request.json.get('client_secrets', None)
+    if not client_secrets:
+        return jsonify({"msg": "Missing client_secrets parameter"}), 400
+
+    redirect_uri = request.json.get('redirect_uri', None)
+    if not redirect_uri:
+        return jsonify({"msg": "Missing redirect_uri parameter"}), 400
+
+    scopes = request.json.get('scopes', None)
+    if not scopes:
+        return jsonify({"msg": "Missing scopes parameter"}), 400
+
+    try: 
+        db_put_gmail_send_auth(request.json)
+    except Exception as e:
+        msg = "An Error ocurred: " + e
+        return jsonify({"msg": msg}), 500
+    else:
+        return jsonify({"msg": "Success"}), 200
+
 
 @app.route('/addinvitee', methods=['POST'])
 def add_invitee():

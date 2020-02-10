@@ -1,4 +1,4 @@
-from .dbclasses import Base, User, Invitee
+from .dbclasses import Base, User, Invitee, GMailAuth
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -61,3 +61,18 @@ def db_User_add(user):
 def db_Invitee_add(invitee):
     with session_scope() as session:
         session.add(invitee)
+
+def db_put_gmail_send_auth(jsonData):
+    with session_scope() as session:
+        result = session.query(GMailAuth).filter(GMailAuth.email == jsonData.get('email')).first()
+        if result is None:
+            result = GMailAuth()
+            session.add(result)
+        result.email = jsonData.get('email')
+        result.fullname = jsonData.get('fullname')
+        result.client_secrets = jsonData.get('client_secrets')
+        result.redirect_uri = jsonData.get('redirect_uri')
+        result.scopes = jsonData.get('scopes')
+        result.state = None
+        result.stateIssuedAt = None
+        result.credentials = None
