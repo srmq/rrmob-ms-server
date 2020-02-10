@@ -74,5 +74,5 @@ def db_put_gmail_send_auth(jsonData):
         result.redirect_uri = jsonData.get('redirect_uri')
         result.scopes = jsonData.get('scopes')
         result.state = None
-        result.stateIssuedAt = None
+        result.state_issued_at = None
         result.credentials = None
