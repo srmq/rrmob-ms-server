@@ -15,7 +15,7 @@ from spotipy.oauth2 import SpotifyOAuth
 import os
 import uuid
 from email.utils import parseaddr
-import re
+import re, json
 import hashlib, base64
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
@@ -251,7 +251,7 @@ def gmail_callback():
                     flow = Flow.from_client_config(gmailAuth.client_secrets, ' '.join(gmailAuth.scopes), redirect_uri = gmailAuth.redirect_uri)
                     flow.fetch_token(code=code)
                     credentials = flow.credentials
-                    gmailAuth.credentials = credentials.to_json()
+                    gmailAuth.credentials = json.loads(credentials.to_json())
         except Exception as e:
             msg = "An Error ocurred: " + e
             return jsonify({"msg": msg}), 500
