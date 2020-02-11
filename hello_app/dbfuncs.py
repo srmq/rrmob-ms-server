@@ -76,3 +76,6 @@ def db_put_gmail_send_auth(jsonData):
         result.state = None
         result.state_issued_at = None
         result.credentials = None
+
+def db_get_GMailAuth(email, session):
+    return session.query(GMailAuth).filter(GMailAuth.email == email).first()

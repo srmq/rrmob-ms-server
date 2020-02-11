@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from flask import (
     Flask, redirect, request, render_template,
@@ -6,7 +7,8 @@ from flask import (
 from . import app
 from .dbfuncs import (
     create_tables, drop_tables, db_User_exists, db_User_add,
-    db_Invitee_idFor, db_Invitee_add, db_put_gmail_send_auth
+    db_Invitee_idFor, db_Invitee_add, db_put_gmail_send_auth,
+    session_scope, db_get_GMailAuth
 )
 from .dbclasses import User, Invitee
 from spotipy.oauth2 import SpotifyOAuth
@@ -15,6 +17,7 @@ import uuid
 from email.utils import parseaddr
 import re
 import hashlib, base64
+from google_auth_oauthlib.flow import Flow
 
 @app.route("/")
 def home():
@@ -161,6 +164,42 @@ def signup():
         return jsonify({"msg": msg}), 500
     else:
         return jsonify({"msg:": "Success"}), 200
+
+@app.route('/revalidategmailauth', methods=['GET'])
+def revalidate_gmail_auth():
+    root_pass = os.environ.get('ROOT_PASS', '')
+    if not root_pass:
+        return jsonify({"msg": "Misconfiguration error. Missing root password?"}), 500
+    elif len(root_pass) < 6:
+        return jsonify({"msg": "Misconfiguration error. Root password is too short?"}), 500
+
+    rcvd_pass = request.args.get('rootpass', default = '', type = str)
+    if not rcvd_pass:
+        return jsonify({"msg": "Missing root password parameter"}), 400
+    if not rcvd_pass == root_pass:
+        return jsonify({"msg": "Invalid root password received"}), 401
+
+    gmail_addr = os.environ.get('GMAIL_ADDR', '')
+    if not gmail_addr:
+        return jsonify({"msg": "Misconfiguration error. Missing gmail address?"}), 500
+    try:
+        with session_scope() as session:
+            gmailAuth = db_get_GMailAuth(gmail_addr, session)
+            
+            if not gmailAuth:
+                return jsonify({"msg": "Misconfiguration error. Gmail address do not have auth info?"}), 500
+
+            log = logging.getLogger()
+            log.debug("Gmail authentication, creating flow. \nClient secrets: %s\nScopes: %s\n", gmailAuth.client_secrets, ' '.join(gmailAuth.scopes))    
+            flow = Flow.from_client_config(gmailAuth.client_secrets, ' '.join(gmailAuth.scopes), redirect_uri = gmailAuth.redirect_uri)
+            (auth_url, state) = flow.authorization_url()
+            gmailAuth.state = state
+            gmailAuth.state_issued_at = datetime.now()
+    except Exception as e:
+        msg = "An Error ocurred: " + e
+        return jsonify({"msg": msg}), 500
+    else:
+        return redirect(auth_url)
 
 @app.route('/putgmailsendauth', methods=['PUT'])
 def put_gmail_send_auth():
