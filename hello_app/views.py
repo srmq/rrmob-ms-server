@@ -166,6 +166,36 @@ def signup():
     else:
         return jsonify({"msg:": "Success"}), 200
 
+@app.route('/getgmailauth', methods=['GET'])
+def get_GMailAuth():
+    root_pass = os.environ.get('ROOT_PASS', '')
+    if not root_pass:
+        return jsonify({"msg": "Misconfiguration error. Missing root password?"}), 500
+    elif len(root_pass) < 6:
+        return jsonify({"msg": "Misconfiguration error. Root password is too short?"}), 500
+
+    rcvd_pass = request.args.get('rootpass', default = '', type = str)
+    if not rcvd_pass:
+        return jsonify({"msg": "Missing root password parameter"}), 400
+    if not rcvd_pass == root_pass:
+        return jsonify({"msg": "Invalid root password received"}), 401
+
+    gmail_addr = os.environ.get('GMAIL_ADDR', '')
+    if not gmail_addr:
+        return jsonify({"msg": "Misconfiguration error. Missing gmail address?"}), 500
+    try:
+        with session_scope() as session:
+            gmailAuth = db_get_GMailAuth(gmail_addr, session)
+            
+            if not gmailAuth:
+                return jsonify({"msg": "Misconfiguration error. Gmail address do not have auth info?"}), 500
+            else:
+                return jsonify(gmailAuth), 200
+    except Exception as e:
+        msg = "An Error ocurred: " + e
+        return jsonify({"msg": msg}), 500
+
+
 @app.route('/revalidategmailauth', methods=['GET'])
 def revalidate_gmail_auth():
     root_pass = os.environ.get('ROOT_PASS', '')
@@ -220,12 +250,12 @@ def gmail_callback():
                     flow.fetch_token(code=code)
                     credentials = flow.credentials
                     gmailAuth.credentials = credentials.to_json()
-                    log = logging.getLogger()
-                    log.info("Credentials: " + gmailAuth.credentials)
-
         except Exception as e:
             msg = "An Error ocurred: " + e
             return jsonify({"msg": msg}), 500
+        else:
+            return jsonify({"msg": "Success"}), 200
+
 
 @app.route('/putgmailsendauth', methods=['PUT'])
 def put_gmail_send_auth():
