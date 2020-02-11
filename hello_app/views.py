@@ -249,9 +249,9 @@ def gmail_callback():
                     raise Exception("Received state is expired")
                 else:
                     flow = Flow.from_client_config(gmailAuth.client_secrets, ' '.join(gmailAuth.scopes), redirect_uri = gmailAuth.redirect_uri)
-                    flow.fetch_token(code=code)
-                    credentials = flow.credentials
-                    gmailAuth.credentials = json.loads(credentials.to_json())
+                    gmailAuth.credentials = flow.fetch_token(code=code)
+                    #credentials = flow.credentials
+                    #gmailAuth.credentials = json.loads(credentials.to_json())
         except Exception as e:
             msg = "An Error ocurred: " + e
             return jsonify({"msg": msg}), 500
