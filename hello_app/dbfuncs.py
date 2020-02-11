@@ -79,3 +79,6 @@ def db_put_gmail_send_auth(jsonData):
 
 def db_get_GMailAuth(email, session):
     return session.query(GMailAuth).filter(GMailAuth.email == email).first()
+
+def db_get_GMailAuth_by_state(state, session):
+    return session.query(GMailAuth).filter(GMailAuth.state == state).first()

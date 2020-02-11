@@ -8,7 +8,7 @@ from . import app
 from .dbfuncs import (
     create_tables, drop_tables, db_User_exists, db_User_add,
     db_Invitee_idFor, db_Invitee_add, db_put_gmail_send_auth,
-    session_scope, db_get_GMailAuth
+    session_scope, db_get_GMailAuth, db_get_GMailAuth_by_state
 )
 from .dbclasses import User, Invitee
 from spotipy.oauth2 import SpotifyOAuth
@@ -18,6 +18,7 @@ from email.utils import parseaddr
 import re
 import hashlib, base64
 from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
 
 @app.route("/")
 def home():
@@ -200,6 +201,31 @@ def revalidate_gmail_auth():
         return jsonify({"msg": msg}), 500
     else:
         return redirect(auth_url)
+
+@app.route("/gmailcallback")
+def gmail_callback():
+    code = request.args.get('code', default = '', type = str)
+    state = request.args.get('state', default = '', type = str)
+    error = request.args.get('error', default = '', type = str)
+    if code and state and not error:
+        try:
+            with session_scope() as session:
+                gmailAuth = db_get_GMailAuth_by_state(state, session)
+                if not gmailAuth:
+                    raise Exception("Invalid state received")
+                elif (datetime.now() - gmailAuth.state_issued_at) > 300:
+                    raise Exception("Received state is expired")
+                else:
+                    flow = Flow.from_client_config(gmailAuth.client_secrets, ' '.join(gmailAuth.scopes), redirect_uri = gmailAuth.redirect_uri)
+                    flow.fetch_token(code=code)
+                    credentials = flow.credentials
+                    gmailAuth.credentials = credentials.to_json()
+                    log = logging.getLogger()
+                    log.info("Credentials: " + gmailAuth.credentials)
+
+        except Exception as e:
+            msg = "An Error ocurred: " + e
+            return jsonify({"msg": msg}), 500
 
 @app.route('/putgmailsendauth', methods=['PUT'])
 def put_gmail_send_auth():
