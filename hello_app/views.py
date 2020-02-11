@@ -10,7 +10,7 @@ from .dbfuncs import (
     db_Invitee_idFor, db_Invitee_add, db_put_gmail_send_auth,
     session_scope, db_get_GMailAuth, db_get_GMailAuth_by_state
 )
-from .dbclasses import User, Invitee
+from .dbclasses import User, Invitee, GMailAuthSchema
 from spotipy.oauth2 import SpotifyOAuth
 import os
 import uuid
@@ -190,7 +190,9 @@ def get_GMailAuth():
             if not gmailAuth:
                 return jsonify({"msg": "Misconfiguration error. Gmail address do not have auth info?"}), 500
             else:
-                return jsonify(gmailAuth), 200
+                gmailAuthSchema = GMailAuthSchema()
+                authData = gmailAuthSchema.dump(gmailAuth)
+                return jsonify(authData), 200
     except Exception as e:
         msg = "An Error ocurred: " + e
         return jsonify({"msg": msg}), 500

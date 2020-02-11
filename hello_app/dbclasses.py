@@ -1,6 +1,7 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, Text, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import JSONB
+from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 
 Base = declarative_base()
 
@@ -40,3 +41,8 @@ class GMailAuth(Base):
     state = Column(Text, unique = True, index=True)
     state_issued_at = Column(DateTime)
     credentials = Column(JSONB)
+
+class GMailAuthSchema(SQLAlchemyAutoSchema):
+    class Meta:
+        model = GMailAuth
+        load_instance = True
