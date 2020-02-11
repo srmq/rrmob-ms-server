@@ -213,7 +213,7 @@ def gmail_callback():
                 gmailAuth = db_get_GMailAuth_by_state(state, session)
                 if not gmailAuth:
                     raise Exception("Invalid state received")
-                elif (datetime.now() - gmailAuth.state_issued_at) > 300:
+                elif (datetime.now() - gmailAuth.state_issued_at).total_seconds() > 300:
                     raise Exception("Received state is expired")
                 else:
                     flow = Flow.from_client_config(gmailAuth.client_secrets, ' '.join(gmailAuth.scopes), redirect_uri = gmailAuth.redirect_uri)
