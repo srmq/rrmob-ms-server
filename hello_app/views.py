@@ -224,7 +224,7 @@ def revalidate_gmail_auth():
 
             log = logging.getLogger()
             log.debug("Gmail authentication, creating flow. \nClient secrets: %s\nScopes: %s\n", gmailAuth.client_secrets, ' '.join(gmailAuth.scopes))    
-            flow = Flow.from_client_config(gmailAuth.client_secrets, ' '.join(gmailAuth.scopes), redirect_uri = gmailAuth.redirect_uri)
+            flow = Flow.from_client_config(gmailAuth.client_secrets, ' '.join(gmailAuth.scopes), redirect_uri = gmailAuth.redirect_uri, access_type = 'offline')
             (auth_url, state) = flow.authorization_url()
             gmailAuth.state = state
             gmailAuth.state_issued_at = datetime.now()
