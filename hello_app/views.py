@@ -250,6 +250,7 @@ def gmail_callback():
                 else:
                     flow = Flow.from_client_config(gmailAuth.client_secrets, ' '.join(gmailAuth.scopes), redirect_uri = gmailAuth.redirect_uri)
                     #gmailAuth.credentials = flow.fetch_token(code=code)
+                    flow.fetch_token(code=code)
                     credentials = flow.credentials
                     gmailAuth.credentials = json.loads(credentials.to_json())
         except Exception as e:
