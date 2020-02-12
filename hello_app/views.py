@@ -263,7 +263,7 @@ def send_hello_mail():
             if not gmailAuth:
                 return jsonify({"msg": "Misconfiguration error. Gmail address do not have auth info?"}), 500
 
-            creds = Credentials.from_authorized_user_info(gmailAuth.credentials, scopes=' '.join(gmailAuth.scopes))
+            creds = Credentials.from_authorized_user_info(gmailAuth.credentials, scopes=gmailAuth.scopes)
             server_request = google.auth.transport.requests.Request()
             creds.refresh(server_request)
             if creds.refresh_token:
