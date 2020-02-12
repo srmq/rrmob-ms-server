@@ -19,6 +19,11 @@ import re, json
 import hashlib, base64
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
+from google.oauth2.credentials import Credentials
+import google.auth.transport.requests
+import requests
+from email.mime.text import MIMEText
+
 
 @app.route("/")
 def home():
@@ -234,6 +239,68 @@ def revalidate_gmail_auth():
     else:
         return redirect(auth_url)
 
+@app.route("/sendhellomail")
+def send_hello_mail():
+    root_pass = os.environ.get('ROOT_PASS', '')
+    if not root_pass:
+        return jsonify({"msg": "Misconfiguration error. Missing root password?"}), 500
+    elif len(root_pass) < 6:
+        return jsonify({"msg": "Misconfiguration error. Root password is too short?"}), 500
+
+    rcvd_pass = request.args.get('rootpass', default = '', type = str)
+    if not rcvd_pass:
+        return jsonify({"msg": "Missing root password parameter"}), 400
+    if not rcvd_pass == root_pass:
+        return jsonify({"msg": "Invalid root password received"}), 401
+
+    gmail_addr = os.environ.get('GMAIL_ADDR', '')
+    if not gmail_addr:
+        return jsonify({"msg": "Misconfiguration error. Missing gmail address?"}), 500
+    try:
+        with session_scope() as session:
+            gmailAuth = db_get_GMailAuth(gmail_addr, session)
+            
+            if not gmailAuth:
+                return jsonify({"msg": "Misconfiguration error. Gmail address do not have auth info?"}), 500
+
+            creds = Credentials.from_authorized_user_info(gmailAuth.credentials, scopes=' '.join(gmailAuth.scopes))
+            server_request = google.auth.transport.requests.Request()
+            creds.refresh(server_request)
+            if creds.refresh_token:
+                gmailAuth.credentials = json.loads(creds.to_json())
+
+        gmail_service = build('gmail', 'v1', credentials=creds)
+        def create_message(sender, to, subject, message_text):
+            """Create a message for an email.
+
+            Args:
+                sender: Email address of the sender.
+                to: Email address of the receiver.
+                subject: The subject of the email message.
+                message_text: The text of the email message.
+
+            Returns:
+                An object containing a base64url encoded email object.
+            """
+            message = MIMEText(message_text)
+            message['to'] = to
+            message['from'] = sender
+            message['subject'] = subject
+            return {'raw': base64.urlsafe_b64encode(message.as_string())}            
+        
+        message = create_message("srmq@cin.ufpe.br", "srmq@srmq.org", "RecommenderEffects: por favor, confirme seu e-mail", "Olá mundo!")
+        sent_message = (gmail_service.users().messages().send(userId="me", body=message).execute())
+        print ("Message Id: %s") % sent_message['id']
+    except Exception as e:
+        msg = "An Error ocurred: " + e
+        return jsonify({"msg": msg}), 500
+    else:
+        return jsonify({"msg": "Success"}), 200
+    
+
+    
+
+
 @app.route("/gmailcallback")
 def gmail_callback():
     code = request.args.get('code', default = '', type = str)
@@ -249,7 +316,6 @@ def gmail_callback():
                     raise Exception("Received state is expired")
                 else:
                     flow = Flow.from_client_config(gmailAuth.client_secrets, ' '.join(gmailAuth.scopes), redirect_uri = gmailAuth.redirect_uri)
-                    #gmailAuth.credentials = flow.fetch_token(code=code)
                     flow.fetch_token(code=code)
                     credentials = flow.credentials
                     gmailAuth.credentials = json.loads(credentials.to_json())
