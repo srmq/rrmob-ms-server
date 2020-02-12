@@ -12,6 +12,7 @@ class User(Base):
     fullname = Column(String(256), nullable=False)
     email = Column(String(320), nullable=False, unique=True, index=True)
     email_verified = Column(Boolean, default = False, server_default="FALSE")
+    verify_code = Column(String(32))
     invitee_id = Column(Integer, ForeignKey('invitees.id'), nullable=False)
     pass_hash = Column(String(128), nullable=False)
     pass_salt = Column(String(32), nullable=False)

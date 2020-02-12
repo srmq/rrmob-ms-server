@@ -163,9 +163,10 @@ def signup():
             return jsonify({"msg": "Given email is not on invitee list"}), 400
             
         user_salt = uuid.uuid4().hex
+        user_verify_code = uuid.uuid4().hex
         
         user_pass_hash = hashlib.sha512(base64.b64encode((password + ":" + user_salt).encode())).hexdigest()
-        new_user = User(fullname = fullname, email = emailaddr, invitee_id = inviteeId, pass_hash = user_pass_hash, pass_salt = user_salt)
+        new_user = User(fullname = fullname, email = emailaddr, verify_code = user_verify_code, invitee_id = inviteeId, pass_hash = user_pass_hash, pass_salt = user_salt)
 
         db_User_add(new_user)
     except Exception as e:
