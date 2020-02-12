@@ -23,6 +23,7 @@ from google.oauth2.credentials import Credentials
 import google.auth.transport.requests
 import requests
 from email.mime.text import MIMEText
+import traceback
 
 
 @app.route("/")
@@ -96,7 +97,8 @@ def create_ddl_db():
     try:
         create_tables()
     except Exception as e:
-        msg = "An Exception ocurred: " + e
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
         return jsonify({"msg": msg}), 500
     else:
         return jsonify({"msg": "Success"}), 200
@@ -118,7 +120,8 @@ def drop_ddl_db():
     try:
         drop_tables()
     except Exception as e:
-        msg = "An Exception ocurred: " + e
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
         return jsonify({"msg": msg}), 500
     else:
         return jsonify({"msg": "Success"}), 200
@@ -166,7 +169,8 @@ def signup():
 
         db_User_add(new_user)
     except Exception as e:
-        msg = "An Exception ocurred: " + e
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
         return jsonify({"msg": msg}), 500
     else:
         return jsonify({"msg:": "Success"}), 200
@@ -199,7 +203,8 @@ def get_GMailAuth():
                 authData = gmailAuthSchema.dump(gmailAuth)
                 return jsonify(authData), 200
     except Exception as e:
-        msg = "An Error ocurred: " + e
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
         return jsonify({"msg": msg}), 500
 
 
@@ -234,7 +239,8 @@ def revalidate_gmail_auth():
             gmailAuth.state = state
             gmailAuth.state_issued_at = datetime.now()
     except Exception as e:
-        msg = "An Error ocurred: " + e
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
         return jsonify({"msg": msg}), 500
     else:
         return redirect(auth_url)
@@ -290,9 +296,10 @@ def send_hello_mail():
         
         message = create_message("srmq@cin.ufpe.br", "srmq@srmq.org", "RecommenderEffects: por favor, confirme seu e-mail", "Olá mundo!")
         sent_message = (gmail_service.users().messages().send(userId="me", body=message).execute())
-        print ("Message Id: %s") % sent_message['id']
+        print ("Message Id: " + sent_message['id']) 
     except Exception as e:
-        msg = "An Error ocurred: " + e
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
         return jsonify({"msg": msg}), 500
     else:
         return jsonify({"msg": "Success"}), 200
@@ -320,7 +327,8 @@ def gmail_callback():
                     credentials = flow.credentials
                     gmailAuth.credentials = json.loads(credentials.to_json())
         except Exception as e:
-            msg = "An Error ocurred: " + e
+            msg = "An Error ocurred: " + str(e)
+            traceback.print_exc()
             return jsonify({"msg": msg}), 500
         else:
             return jsonify({"msg": "Success"}), 200
@@ -370,7 +378,8 @@ def put_gmail_send_auth():
     try: 
         db_put_gmail_send_auth(request.json)
     except Exception as e:
-        msg = "An Error ocurred: " + e
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
         return jsonify({"msg": msg}), 500
     else:
         return jsonify({"msg": "Success"}), 200
@@ -400,7 +409,8 @@ def add_invitee():
         invitee = Invitee(email = emailaddr)
         db_Invitee_add(invitee)
     except Exception as e:
-        msg = "An Error ocurred: " + e
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
         return jsonify({"msg": msg}), 500
     else:
         return jsonify({"msg": "Success"}), 200
