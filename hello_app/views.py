@@ -286,7 +286,7 @@ def send_hello_mail():
             message['to'] = to
             message['from'] = sender
             message['subject'] = subject
-            return {'raw': base64.urlsafe_b64encode(message.as_string().encode('utf-8'))}            
+            return {'raw': base64.urlsafe_b64encode(message.as_string().encode('utf-8')).decode("utf-8")}            
         
         message = create_message("srmq@cin.ufpe.br", "srmq@srmq.org", "RecommenderEffects: por favor, confirme seu e-mail", "Olá mundo!")
         sent_message = (gmail_service.users().messages().send(userId="me", body=message).execute())
