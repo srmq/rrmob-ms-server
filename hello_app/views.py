@@ -16,8 +16,7 @@ from spotipy.oauth2 import SpotifyOAuth
 import os
 import uuid
 from email.utils import parseaddr
-import re, json
-import hashlib, base64
+import re, json, hashlib, base64
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
@@ -26,7 +25,7 @@ import requests
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import traceback
-
+ 
 def send_confirmation_mail(send_addr, fullname, emailaddr, user_verify_code):
     def create_confirmation_message(to_name, to_address, verification_code):
         plain_message_body = "Olá {fullname}!\n\nPara que possamos confirmar seu endereço de email, precisamos que você visite o seguinte link, clicando sobre ele ou então copiando e colando o endereço em seu navegador: https://rrmob-ms-server.herokuapp.com/confirmemail?u={emailaddr}&c={user_verify_code} .\n\nAgradecemos sua colaboração!\n\nSergio Queiroz\nEquipe RecommenderEffects".format(fullname=fullname, emailaddr=emailaddr, user_verify_code=user_verify_code)
