@@ -186,11 +186,11 @@ def drop_ddl_db():
 
 @app.route('/confirmemail', methods=['GET'])
 def confirm_email():
-    emailaddr = request.json.get('u', None)
+    emailaddr = request.args.get('u', None)
     if not emailaddr:
         return jsonify({"msg": "Missing email address parameter"}), 400    
     
-    code = request.json.get('c', None)
+    code = request.args.get('c', None)
     if not code:
         return jsonify({"msg": "Missing confirmation code parameter"}), 400
 
