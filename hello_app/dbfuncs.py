@@ -82,3 +82,6 @@ def db_get_GMailAuth(email, session):
 
 def db_get_GMailAuth_by_state(state, session):
     return session.query(GMailAuth).filter(GMailAuth.state == state).first()
+
+def db_get_User_by_email(email, session):
+    return session.query(User).filter(User.email == email).first()

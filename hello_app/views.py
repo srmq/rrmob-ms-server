@@ -8,7 +8,8 @@ from . import app
 from .dbfuncs import (
     create_tables, drop_tables, db_User_exists, db_User_add,
     db_Invitee_idFor, db_Invitee_add, db_put_gmail_send_auth,
-    session_scope, db_get_GMailAuth, db_get_GMailAuth_by_state
+    session_scope, db_get_GMailAuth, db_get_GMailAuth_by_state,
+    db_get_User_by_email
 )
 from .dbclasses import User, Invitee, GMailAuthSchema
 from spotipy.oauth2 import SpotifyOAuth
@@ -177,6 +178,36 @@ def drop_ddl_db():
         return jsonify({"msg": "Invalid root password received"}), 401
     try:
         drop_tables()
+    except Exception as e:
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
+        return jsonify({"msg": msg}), 500
+    else:
+        return jsonify({"msg": "Success"}), 200
+
+@app.route('/confirmemail', methods=['GET'])
+def confirm_email():
+    emailaddr = request.json.get('u', None)
+    if not emailaddr:
+        return jsonify({"msg": "Missing email address parameter"}), 400    
+    
+    code = request.json.get('c', None)
+    if not code:
+        return jsonify({"msg": "Missing confirmation code parameter"}), 400
+
+    try:
+        with session_scope() as session:
+            user = db_get_User_by_email(emailaddr, session)
+            if not user:
+                return jsonify({"msg": "Missing confirmation code parameter"}), 400
+
+            if user.email_verified:
+                return jsonify({"msg": "Email is already verified"}), 400
+
+            if not user.verify_code == code:
+                return jsonify({"msg": "Invalid verification code"}), 400
+            
+            user.email_verified = True
     except Exception as e:
         msg = "An Error ocurred: " + str(e)
         traceback.print_exc()
