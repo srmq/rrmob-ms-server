@@ -23,24 +23,78 @@ from google.oauth2.credentials import Credentials
 import google.auth.transport.requests
 import requests
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import traceback
+
+def send_confirmation_mail(send_addr, fullname, emailaddr, user_verify_code):
+    def create_confirmation_message(to_name, to_address, verification_code):
+        plain_message_body = "Olá {fullname}!\n\nPara que possamos confirmar seu endereço de email, precisamos que você visite o seguinte link, clicando sobre ele ou então copiando e colando o endereço em seu navegador: https://rrmob-ms-server.herokuapp.com/confirmemail?u={emailaddr}&c={user_verify_code} .\n\nAgradecemos sua colaboração!\n\nSergio Queiroz\nEquipe RecommenderEffects".format(fullname=fullname, emailaddr=emailaddr, user_verify_code=user_verify_code)
+        html_message_body = """\
+        <div dir="ltr">Olá {fullname}!<div><br></div><div>Para que 
+        possamos confirmar seu endereço de email, precisamos que 
+        você visite o seguinte link, clicando sobre ele ou então
+        copiando e colando o endereço em seu navegador:
+        <a href="https://rrmob-ms-server.herokuapp.com/confirmemail?u={emailaddr}&c={user_verify_code}">
+        https://rrmob-ms-server.herokuapp.com/confirmemail?u={emailaddr}&c={user_verify_code}</a></div>
+        <div><br></div><div>Agradecemos sua colaboração!</div>
+        <div><br></div><div>Sergio Queiroz</div><div><br></div><div>Equipe RecommenderEffects</div></div>
+        """.format(fullname=fullname, emailaddr=emailaddr, user_verify_code=user_verify_code)
+
+        plain_message = MIMEText(plain_message_body)
+        html_message = MIMEText(html_message_body, 'html')
+        message = MIMEMultipart('alternative')
+        message['Subject'] = "RecommenderEffects: {0}, por favor, confirme o seu e-mail".format(fullname)
+        message['From'] = "srmq@cin.ufpe.br"
+        message['To'] = emailaddr
+        message.attach(plain_message)
+        message.attach(html_message)
+
+        return {'raw': base64.urlsafe_b64encode(message.as_string().encode('utf-8')).decode("utf-8")}
+
+    try:
+        with session_scope() as session:
+            gmailAuth = db_get_GMailAuth(send_addr, session)
+            
+            if not gmailAuth:
+                return jsonify({"msg": "Misconfiguration error. Gmail address do not have auth info?"}), 500
+
+            creds = Credentials.from_authorized_user_info(gmailAuth.credentials, scopes=gmailAuth.scopes)
+            server_request = google.auth.transport.requests.Request()
+            creds.refresh(server_request)
+            if creds.refresh_token:
+                gmailAuth.credentials = json.loads(creds.to_json())
+
+        gmail_service = build('gmail', 'v1', credentials=creds)
+        message = create_confirmation_message(fullname, emailaddr, user_verify_code)
+        sent_message = (gmail_service.users().messages().send(userId="me", body=message).execute())
+        print ("Message Id: " + sent_message['id']) 
+    except Exception as e:
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
+        return jsonify({"msg": msg}), 500
+    else:
+        return jsonify({"msg": "Success"}), 200
 
 
 @app.route("/")
 def home():
     return render_template("home.html")
 
+
 @app.route("/about/")
 def about():
     return render_template("about.html")
+
 
 @app.route("/contact/")
 def contact():
     return render_template("contact.html")
 
+
 @app.route("/privacy/")
 def privacy():
     return render_template("privacy.html")
+
 
 @app.route("/hello/")
 @app.route("/hello/<name>")
@@ -51,9 +105,11 @@ def hello_there(name = None):
         date=datetime.now()
     )
 
+
 @app.route("/api/data")
 def get_data():
     return app.send_static_file("data.json")
+
 
 @app.route("/spotcallback")
 def spot_callback():
@@ -67,6 +123,7 @@ def spot_callback():
         error=error
     )
 
+
 @app.route("/login")
 def login():
     client_id = os.environ.get('SPOTIPY_CLIENT_ID', '')
@@ -75,10 +132,10 @@ def login():
     my_state = uuid.uuid4().hex
     my_scopes = 'user-read-email playlist-read-collaborative user-read-private playlist-modify-public user-top-read playlist-read-private user-follow-read user-read-recently-played playlist-modify-private user-library-read'
 
-
     sp_oauth = SpotifyOAuth(client_id, client_secret, redirect_uri, state=my_state, scope=my_scopes)
     auth_url = sp_oauth.get_authorize_url()
     return redirect(auth_url)
+
 
 @app.route('/createtables', methods=['POST'])
 def create_ddl_db():
@@ -102,6 +159,7 @@ def create_ddl_db():
         return jsonify({"msg": msg}), 500
     else:
         return jsonify({"msg": "Success"}), 200
+
 
 @app.route('/droptables', methods=['POST'])
 def drop_ddl_db():
@@ -154,6 +212,10 @@ def signup():
     elif re.search(r"[A-Z]", password) is None and re.search(r"[a-z]", password) is None:
         return jsonify({"msg": "Password parameter should have at least one letter"}), 400
 
+    gmail_addr = os.environ.get('GMAIL_ADDR', '')
+    if not gmail_addr:
+        return jsonify({"msg": "Misconfiguration error. Missing gmail address?"}), 500
+
     try:
         if db_User_exists(emailaddr):
             return jsonify({"msg": "User with given email already exists"}), 400
@@ -169,12 +231,12 @@ def signup():
         new_user = User(fullname = fullname, email = emailaddr, verify_code = user_verify_code, invitee_id = inviteeId, pass_hash = user_pass_hash, pass_salt = user_salt)
 
         db_User_add(new_user)
+        return send_confirmation_mail(gmail_addr, fullname, emailaddr, user_verify_code)
     except Exception as e:
         msg = "An Error ocurred: " + str(e)
         traceback.print_exc()
         return jsonify({"msg": msg}), 500
-    else:
-        return jsonify({"msg:": "Success"}), 200
+
 
 @app.route('/getgmailauth', methods=['GET'])
 def get_GMailAuth():
@@ -246,6 +308,7 @@ def revalidate_gmail_auth():
     else:
         return redirect(auth_url)
 
+
 @app.route("/sendhellomail")
 def send_hello_mail():
     root_pass = os.environ.get('ROOT_PASS', '')
@@ -304,9 +367,6 @@ def send_hello_mail():
         return jsonify({"msg": msg}), 500
     else:
         return jsonify({"msg": "Success"}), 200
-    
-
-    
 
 
 @app.route("/gmailcallback")
