@@ -102,7 +102,7 @@ def about():
 
 @app.route("/contact/")
 def contact():
--xz[]    return render_template("contact.html")
+    return render_template("contact.html")
 
 
 @app.route("/privacy/")
