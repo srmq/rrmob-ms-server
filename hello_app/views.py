@@ -25,6 +25,20 @@ import requests
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import traceback
+from flask_jwt_extended import (
+    JWTManager, jwt_required, create_access_token,
+    get_jwt_identity
+)
+
+_root_pass = os.environ.get('ROOT_PASS', '')
+if not _root_pass:
+    raise Exception("Configuration Error. No ROOT_PASS found")
+if len(_root_pass) < 6:
+    raise Exception("Configuration Error. ROOT_PASS too weak")
+app.config['JWT_SECRET_KEY'] = hashlib.sha512(base64.b64encode((_root_pass).encode())).hexdigest()
+_root_pass = None
+
+jwt = JWTManager(app)
  
 def send_confirmation_mail(send_addr, fullname, emailaddr, user_verify_code):
     def create_confirmation_message(to_name, to_address, verification_code):
@@ -88,7 +102,7 @@ def about():
 
 @app.route("/contact/")
 def contact():
-    return render_template("contact.html")
+-xz[]    return render_template("contact.html")
 
 
 @app.route("/privacy/")
@@ -213,6 +227,35 @@ def confirm_email():
         return jsonify({"msg": msg}), 500
     else:
         return jsonify({"msg": "Success"}), 200
+
+@app.route('/signin', methods=['POST'])
+def signin():
+    if not request.is_json:
+        return jsonify({"msg": "Malformed request, expecting JSON"}), 400
+
+    email = request.json.get('email', None)
+    if not email:
+        return jsonify({"msg": "Missing email address parameter"}), 400
+
+    password = request.json.get('password', None)
+    if not password:
+        return jsonify({"msg": "Missing password parameter"}), 400
+
+    try:
+        with session_scope() as session:
+            user = db_get_User_by_email(email, session)
+            if not user:
+                return jsonify({"msg": "Invalid user or password"}), 401
+            user_pass_hash = hashlib.sha512(base64.b64encode((password + ":" + user.pass_salt).encode())).hexdigest()
+            if not user_pass_hash == user.pass_hash:
+                return jsonify({"msg": "Invalid user or password"}), 401
+        access_token = create_access_token(identity=email)
+        return jsonify(access_token=access_token), 200
+    except Exception as e:
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
+        return jsonify({"msg": msg}), 500
+            
 
 
 @app.route('/signup', methods=['POST'])
