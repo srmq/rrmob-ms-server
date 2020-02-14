@@ -21,7 +21,6 @@ class User(Base):
     spot_id = Column(String(1024))
     auth_info = Column(JSONB)
     user_info = Column(JSONB)
-    spotify_auth = relationship("SpotifyAuth", uselist=False, back_populates="user")
 
     def __repr__(self):
         return "{\"id\": %s, \"fullname\": \"%s\", \"email\": \"%s\", \"email_verified\": \"%s\", \"invitee_id\": \"%s\", \"pass_hash\": \"%s\", \"pass_salt\": \"%s\", \"spot_id\": \"%s\", \"auth_info\": \"%s\", \"user_info\": \"%s\"}" % (self.id, self.fullname, self.email, self.email_verified, self.invitee_id, self.pass_hash, self.pass_salt, self.spot_id, self.auth_info, self.user_info)
@@ -59,3 +58,5 @@ class SpotifyAuth(Base):
     state = Column(String(32), unique = True, index = True)
     state_issued_at = Column(DateTime)
     token_info = Column(JSONB)
+
+User.spotify_auth = property(relationship("SpotifyAuth", uselist=False, back_populates="user"))
