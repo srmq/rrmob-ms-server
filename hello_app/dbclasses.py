@@ -59,4 +59,4 @@ class SpotifyAuth(Base):
     state_issued_at = Column(DateTime)
     token_info = Column(JSONB)
 
-User.spotify_auth = property(relationship("SpotifyAuth", uselist=False, back_populates="user"))
+User.spotify_auth = relationship("SpotifyAuth", uselist=False, back_populates="user")
