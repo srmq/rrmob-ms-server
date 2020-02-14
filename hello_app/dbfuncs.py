@@ -1,4 +1,4 @@
-from .dbclasses import Base, User, Invitee, GMailAuth
+from .dbclasses import Base, User, Invitee, GMailAuth, SpotifyAuth
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -82,6 +82,9 @@ def db_get_GMailAuth(email, session):
 
 def db_get_GMailAuth_by_state(state, session):
     return session.query(GMailAuth).filter(GMailAuth.state == state).first()
+
+def db_get_SpotifyAuth_by_state(state, session):
+    return session.query(SpotifyAuth).filter(SpotifyAuth.state == state).first()
 
 def db_get_User_by_email(email, session):
     return session.query(User).filter(User.email == email).first()

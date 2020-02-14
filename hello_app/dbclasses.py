@@ -1,6 +1,8 @@
 from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, Text, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import relationship
+
 from marshmallow_sqlalchemy import SQLAlchemyAutoSchema, auto_field
 
 Base = declarative_base()
@@ -19,6 +21,7 @@ class User(Base):
     spot_id = Column(String(1024))
     auth_info = Column(JSONB)
     user_info = Column(JSONB)
+    spotify_auth = relationship("SpotifyAuth", uselist=False, back_populates="user")
 
     def __repr__(self):
         return "{\"id\": %s, \"fullname\": \"%s\", \"email\": \"%s\", \"email_verified\": \"%s\", \"invitee_id\": \"%s\", \"pass_hash\": \"%s\", \"pass_salt\": \"%s\", \"spot_id\": \"%s\", \"auth_info\": \"%s\", \"user_info\": \"%s\"}" % (self.id, self.fullname, self.email, self.email_verified, self.invitee_id, self.pass_hash, self.pass_salt, self.spot_id, self.auth_info, self.user_info)
@@ -47,3 +50,12 @@ class GMailAuthSchema(SQLAlchemyAutoSchema):
     class Meta:
         model = GMailAuth
         load_instance = True
+
+class SpotifyAuth(Base):
+    __tablename__ = 'spotifyauths'
+    id = Column('id', Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False, unique=True)
+    user = relationship("User", back_populates="spotify_auth")
+    state = Column(String(32), unique = True, index = True)
+    state_issued_at = Column(DateTime)
+    token_info = Column(JSONB)

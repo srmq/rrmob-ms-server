@@ -9,9 +9,9 @@ from .dbfuncs import (
     create_tables, drop_tables, db_User_exists, db_User_add,
     db_Invitee_idFor, db_Invitee_add, db_put_gmail_send_auth,
     session_scope, db_get_GMailAuth, db_get_GMailAuth_by_state,
-    db_get_User_by_email
+    db_get_User_by_email, db_get_SpotifyAuth_by_state
 )
-from .dbclasses import User, Invitee, GMailAuthSchema
+from .dbclasses import User, Invitee, GMailAuthSchema, SpotifyAuth
 from spotipy.oauth2 import SpotifyOAuth
 import os
 import uuid
@@ -128,18 +128,38 @@ def get_data():
 @app.route("/spotcallback")
 def spot_callback():
     code = request.args.get('code', default = '', type = str)
-    state = request.args.get('state', default = '', type = str)
+    my_state = request.args.get('state', default = '', type = str)
     error = request.args.get('error', default = '', type = str)
-    return render_template(
-        "spotcallback.html",
-        code=code,
-        state=state,
-        error=error
-    )
+    if code and my_state and not error:
+        try:
+            with session_scope() as session:
+                spotifyAuth = db_get_SpotifyAuth_by_state(my_state, session)
+                if not spotifyAuth:
+                    raise Exception("Invalid state received")
+                elif (datetime.now() - spotifyAuth.state_issued_at).total_seconds() > 300:
+                    raise Exception("Received state is expired")
+                else:
+                    client_id = os.environ.get('SPOTIPY_CLIENT_ID', '')
+                    client_secret = os.environ.get('SPOTIPY_CLIENT_SECRET', '')
+                    redirect_uri = os.environ.get('SPOTIPY_REDIRECT_URI', '')
+                    my_scopes = 'user-read-email playlist-read-collaborative user-read-private playlist-modify-public user-top-read playlist-read-private user-follow-read user-read-recently-played playlist-modify-private user-library-read'
+                    sp_oauth = SpotifyOAuth(client_id, client_secret, redirect_uri, state=my_state, scope=my_scopes)
+                    spotifyAuth.token_info = sp_oauth.get_access_token(code)
+                    spotifyAuth.state = None
+        except Exception as e:
+            msg = "An Error ocurred: " + str(e)
+            traceback.print_exc()
+            return jsonify({"msg": msg}), 500
+        else:
+            return jsonify({"msg": "Success"}), 200
+    else:
+            return jsonify({"msg": "Callback with error: {0}".format(error)}), 400
 
 
-@app.route("/login")
-def login():
+
+@app.route("/spotauthorize")
+@jwt_required
+def spot_autorize():
     client_id = os.environ.get('SPOTIPY_CLIENT_ID', '')
     client_secret = os.environ.get('SPOTIPY_CLIENT_SECRET', '')
     redirect_uri = os.environ.get('SPOTIPY_REDIRECT_URI', '')
@@ -148,7 +168,26 @@ def login():
 
     sp_oauth = SpotifyOAuth(client_id, client_secret, redirect_uri, state=my_state, scope=my_scopes)
     auth_url = sp_oauth.get_authorize_url()
-    return redirect(auth_url)
+
+    my_state = uuid.uuid4().hex
+    state_issued_at = datetime.now()
+
+    try:
+        with session_scope() as session:
+            email = get_jwt_identity()
+            user = db_get_User_by_email(email, session)
+            if not user:
+                return jsonify({"msg": "Unknown authorized user"}), 500
+            if not user.spotify_auth:
+                user.spotify_auth = SpotifyAuth(user_id = user.id)
+            user.spotify_auth.state = my_state
+            user.spotify_auth.state_issued_at = state_issued_at
+    except Exception as e:
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
+        return jsonify({"msg": msg}), 500
+    else:
+        return redirect(auth_url)
 
 
 @app.route('/createtables', methods=['POST'])
@@ -156,10 +195,6 @@ def create_ddl_db():
     if not request.is_json:
         return jsonify({"msg": "Malformed request, expecting JSON"}), 400
     root_pass = os.environ.get('ROOT_PASS', '')
-    if not root_pass:
-        return jsonify({"msg": "Misconfiguration error. Missing password?"}), 500
-    elif len(root_pass) < 6:
-        return jsonify({"msg": "Misconfiguration error. Root password is too short?"}), 500
     rcvd_pass = request.json.get('rootpass', None)
     if not rcvd_pass:
         return jsonify({"msg": "Missing root password parameter"}), 400
@@ -180,10 +215,6 @@ def drop_ddl_db():
     if not request.is_json:
         return jsonify({"msg": "Malformed request, expecting JSON"}), 400
     root_pass = os.environ.get('ROOT_PASS', '')
-    if not root_pass:
-        return jsonify({"msg": "Misconfiguration error. Missing password?"}), 500
-    elif len(root_pass) < 6:
-        return jsonify({"msg": "Misconfiguration error. Root password is too short?"}), 500
     rcvd_pass = request.json.get('rootpass', None)
     if not rcvd_pass:
         return jsonify({"msg": "Missing root password parameter"}), 400
@@ -310,14 +341,42 @@ def signup():
         traceback.print_exc()
         return jsonify({"msg": msg}), 500
 
+@app.route('/getspotifyauth', methods=['POST'])
+def get_SpotifyAuth():
+    root_pass = os.environ.get('ROOT_PASS', '')
+    if not request.is_json:
+        return jsonify({"msg": "Malformed request, expecting JSON"}), 400
+
+    rcvd_pass = request.json.get('rootpass', None)
+    if not rcvd_pass:
+        return jsonify({"msg": "Missing root password parameter"}), 400
+    if not rcvd_pass == root_pass:
+        return jsonify({"msg": "Invalid root password received"}), 401
+
+    user_addr = request.json.get('email', None)
+    if not user_addr:
+        return jsonify({"msg": "Missing email parameter"}), 400
+
+    try:
+        with session_scope() as session:
+            user = db_get_User_by_email(user_addr, session)
+            if not user:
+                return jsonify({"msg": "Unknown email"}), 400
+    except Exception as e:
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
+        return jsonify({"msg": msg}), 500
+    else:
+        if not user.spotify_auth:
+            ret = None
+        else:
+            ret = user.spotify_auth.token_info
+        return jsonify(ret), 200
+
 
 @app.route('/getgmailauth', methods=['GET'])
 def get_GMailAuth():
     root_pass = os.environ.get('ROOT_PASS', '')
-    if not root_pass:
-        return jsonify({"msg": "Misconfiguration error. Missing root password?"}), 500
-    elif len(root_pass) < 6:
-        return jsonify({"msg": "Misconfiguration error. Root password is too short?"}), 500
 
     rcvd_pass = request.args.get('rootpass', default = '', type = str)
     if not rcvd_pass:
@@ -347,10 +406,6 @@ def get_GMailAuth():
 @app.route('/revalidategmailauth', methods=['GET'])
 def revalidate_gmail_auth():
     root_pass = os.environ.get('ROOT_PASS', '')
-    if not root_pass:
-        return jsonify({"msg": "Misconfiguration error. Missing root password?"}), 500
-    elif len(root_pass) < 6:
-        return jsonify({"msg": "Misconfiguration error. Root password is too short?"}), 500
 
     rcvd_pass = request.args.get('rootpass', default = '', type = str)
     if not rcvd_pass:
@@ -385,10 +440,6 @@ def revalidate_gmail_auth():
 @app.route("/sendhellomail")
 def send_hello_mail():
     root_pass = os.environ.get('ROOT_PASS', '')
-    if not root_pass:
-        return jsonify({"msg": "Misconfiguration error. Missing root password?"}), 500
-    elif len(root_pass) < 6:
-        return jsonify({"msg": "Misconfiguration error. Root password is too short?"}), 500
 
     rcvd_pass = request.args.get('rootpass', default = '', type = str)
     if not rcvd_pass:
@@ -466,6 +517,8 @@ def gmail_callback():
             return jsonify({"msg": msg}), 500
         else:
             return jsonify({"msg": "Success"}), 200
+    else:
+            return jsonify({"msg": "Callback with error: {0}".format(error)}), 400
 
 
 @app.route('/putgmailsendauth', methods=['PUT'])
@@ -474,10 +527,6 @@ def put_gmail_send_auth():
         return jsonify({"msg": "Malformed request, expecting JSON"}), 400
 
     root_pass = os.environ.get('ROOT_PASS', '')
-    if not root_pass:
-        return jsonify({"msg": "Misconfiguration error. Missing password?"}), 500
-    elif len(root_pass) < 6:
-        return jsonify({"msg": "Misconfiguration error. Root password is too short?"}), 500
 
     rcvd_pass = request.json.get('rootpass', None)
     if not rcvd_pass:
@@ -524,10 +573,6 @@ def add_invitee():
     if not request.is_json:
         return jsonify({"msg": "Malformed request, expecting JSON"}), 400
     root_pass = os.environ.get('ROOT_PASS', '')
-    if not root_pass:
-        return jsonify({"msg": "Misconfiguration error. Missing password?"}), 500
-    elif len(root_pass) < 6:
-        return jsonify({"msg": "Misconfiguration error. Root password is too short?"}), 500
     rcvd_pass = request.json.get('rootpass', None)
     if not rcvd_pass:
         return jsonify({"msg": "Missing root password parameter"}), 400
