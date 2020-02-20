@@ -90,11 +90,6 @@ def send_confirmation_mail(send_addr, fullname, emailaddr, user_verify_code):
         return jsonify({"msg": "Success"}), 200
 
 
-@app.route("/")
-def home():
-    return render_template("home.html")
-
-
 @app.route("/about/")
 def about():
     return render_template("about.html")
@@ -593,3 +588,8 @@ def add_invitee():
         return jsonify({"msg": msg}), 500
     else:
         return jsonify({"msg": "Success"}), 200
+
+@app.route('/', defaults={'u_path': ''})
+@app.route('/<path:u_path>')
+def catch_all(u_path):
+    return app.send_static_file("index.html")

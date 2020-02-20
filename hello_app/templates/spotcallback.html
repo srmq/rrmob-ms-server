@@ -6,13 +6,7 @@
         <title>Hello, Flask</title>
     </head>
     <body>
-        {%if code %}
-            <span class="message">Authorization Sucessful!</span> State is: {{ state }}. Authorization code follows in the next line<br><pre>CUT {{ code }} CUT</pre> 
-        {% elif error %}
-            <span class="message">Authorization Failed!</span> Error code is: {{ error }}. State is: {{ state }}
-        {% else %}
-            <span class="message">Unexpected state: no code and no error received</span>
-        {% endif %}
+        <span class="message">Obrigado pela colaboração, {{ name }}. Em breve entraremos em contato para as próximas etapas do estudo.</span>
     </body>
 </html>
 <!-- The above syntax makes use of jinja and it's documentation can be found over here http://jinja.pocoo.org/docs/2.10/templates/ -->
