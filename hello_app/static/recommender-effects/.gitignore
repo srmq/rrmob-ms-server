@@ -1,6 +1,7 @@
 .DS_Store
 node_modules
-/dist
+# let dist for easy heroku deployment
+#/dist
 
 # local env files
 .env.local
