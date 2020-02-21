@@ -14,6 +14,7 @@ from .dbfuncs import (
 from .dbclasses import User, Invitee, GMailAuthSchema, SpotifyAuth
 from spotipy.oauth2 import SpotifyOAuth
 import os
+import os.path
 import uuid
 from email.utils import parseaddr
 import re, json, hashlib, base64
@@ -592,4 +593,7 @@ def add_invitee():
 @app.route('/', defaults={'u_path': ''})
 @app.route('/<path:u_path>')
 def catch_all(u_path):
-    return app.send_static_file("index.html")
+    if u_path and os.path.isfile(app.static_folder + "/" + u_path):
+        return app.send_static_file(u_path)
+    else:
+        return app.send_static_file("index.html")
