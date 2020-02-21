@@ -1,0 +1,97 @@
+<template>
+    <v-container class="fill-height" fluid >
+    <v-row align="center" justify="center" >
+        <v-col cols="12" sm="8" md="4" >
+        <v-card class="elevation-12" >
+            <v-toolbar color="primary" dark flat >
+            <v-toolbar-title>Recommender Effects</v-toolbar-title>
+            </v-toolbar>
+            <v-card-text>
+            <v-form v-model="valid" :lazy-validation="lazy">
+                <span v-if="firstAccess">
+                <v-text-field
+                label="Nome"
+                v-model="name"
+                :rules="nameRules"
+                prepend-icon="person"
+                type="text"
+                required
+                />
+                </span>
+
+                <v-text-field
+                label="E-mail"
+                v-model="email"
+                :rules="emailRules"
+                prepend-icon="email"
+                type="text"
+                required
+                />
+
+                <v-text-field
+                id="password"
+                label="Senha"
+                v-model="password"
+                :rules="passwordRules"
+                prepend-icon="lock"
+                type="password"
+                required
+                />
+                <span v-if="firstAccess">
+                <v-text-field
+                id="password-check"
+                label="Confirme a senha"
+                v-model="passwordCheck"
+                :rules="[passwordsOk]"
+                prepend-icon="lock"
+                type="password"
+                required
+                />
+                </span>
+            </v-form>
+            </v-card-text>
+            <v-card-actions>
+            <span v-if="!firstAccess"><a v-on:click.prevent="firstAccess = true">Primeiro acesso?</a></span>
+            <span v-if="firstAccess"><a v-on:click.prevent="firstAccess = false">Já tenho uma conta</a></span>            
+            <v-spacer />
+            <v-btn :disabled="!valid" color="primary">Entrar</v-btn>
+            </v-card-actions>
+        </v-card>
+        </v-col>
+    </v-row>
+    </v-container>
+</template>
+
+<script>
+export default {
+  name: 'Login',
+
+  data: () => ({
+    lazy: true,
+    valid: true,
+    name : '',
+    nameRules : [
+      v => !!v || 'Nome obrigatório',        
+    ],
+    email : '',
+    emailRules : [
+      v => !!v || 'E-mail obrigatório',
+      v => /.+@.+\..+/.test(v) || 'E-mail inválido',
+    ],
+    password : '',
+    passwordRules : [
+      v => !!v || 'Senha obrigatória',
+    ],
+    passwordCheck : '',
+    firstAccess: false
+  }),
+  methods: {
+      passwordsOk(checkPassword) {
+          if (!(checkPassword == this.password)) {
+              return "As senhas não coincidem";
+          }
+          return true;
+      }
+  }    
+}
+</script>
