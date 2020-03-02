@@ -28,6 +28,7 @@ export default {
     bus.$on('loggedIn', (accessToken) => {
       this.accessToken = accessToken;
       this.loggedIn = true;
+      console.log(this.accessToken);
     });
     bus.$on('loggedOut', () => { this.loggedIn = false; });
   }  

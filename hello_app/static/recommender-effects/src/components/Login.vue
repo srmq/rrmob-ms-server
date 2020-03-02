@@ -66,7 +66,7 @@
 
 <script>
 import axios from 'axios';
-//import { bus } from '../main'
+import { bus } from '../main'
 
 export default {
   name: 'Login',
@@ -104,7 +104,7 @@ export default {
           password: this.password
         })
         .then(function (response) {
-          console.log(response);
+          bus.$emit('loggedIn', response.data.acess_token);
         })
         .catch(function(error) {
           console.log(error);
