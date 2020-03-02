@@ -104,7 +104,7 @@ export default {
           password: this.password
         })
         .then(function (response) {
-          bus.$emit('loggedIn', response.data.acess_token);
+          bus.$emit('loggedIn', response.data.access_token);
         })
         .catch(function(error) {
           console.log(error);
