@@ -32,6 +32,7 @@
                 id="password"
                 label="Senha"
                 v-model="password"
+                v-on:keyup="(event) => { if (!firstAccess) submitIfEnter(event); }" 
                 :rules="passwordRules"
                 prepend-icon="lock"
                 type="password"
@@ -42,6 +43,7 @@
                 id="password-check"
                 label="Confirme a senha"
                 v-model="passwordCheck"
+                v-on:keyup="submitIfEnter"
                 :rules="[passwordsOk]"
                 prepend-icon="lock"
                 type="password"
@@ -63,6 +65,9 @@
 </template>
 
 <script>
+import axios from 'axios';
+//import { bus } from '../main'
+
 export default {
   name: 'Login',
 
@@ -83,14 +88,37 @@ export default {
       v => !!v || 'Senha obrigatória',
     ],
     passwordCheck : '',
-    firstAccess: false
+    firstAccess: false, 
+    errors : []
   }),
   methods: {
       passwordsOk(checkPassword) {
-          if (!(checkPassword == this.password)) {
-              return "As senhas não coincidem";
+        if (!(checkPassword == this.password)) {
+          return "As senhas não coincidem";
+        }
+        return true;
+      },
+      doSignIn() {
+        axios.post('/signin', {
+          email: this.email,
+          password: this.password
+        })
+        .then(function (response) {
+          console.log(response);
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
+      },
+      submitIfEnter(event) {
+        if (event.key == 'Enter' && this.valid) {
+          if (this.firstAccess) {
+            //FIXME TODO signup
+            console.log('do signup');
+          } else {
+            this.doSignIn();
           }
-          return true;
+        }
       }
   }    
 }
