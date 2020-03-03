@@ -37,6 +37,7 @@ export default {
 
   methods: {
     isEmailVerified() {
+      var result = false;
       axios.get('/isemailverified')
         .then(function (response) {
           result = response.data.result;
