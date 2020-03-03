@@ -39,13 +39,13 @@ export default {
     isEmailVerified() {
       axios.get('/isemailverified')
         .then(function (response) {
-          console.log(response);          
-          return response.data.result;
+          result = response.data.result;
         })
         .catch(function (error) {
           console.log(error);
-          return false;
+          result = false;
         });
+      return result;
     }
   }    
 }
