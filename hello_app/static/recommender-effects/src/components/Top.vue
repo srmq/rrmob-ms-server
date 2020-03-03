@@ -6,7 +6,7 @@
             Bem-vindo(a) ao Recommender Effects!
           </h1>
 
-          <div v-if="!isEmailVerified()">
+          <div v-if="isEmailVerified() == false">
             <p  class="subheading font-weight-regular">
               Foi-lhe enviada uma mensagem de verificação para seu endereço de e-mail
               informado. Por favor, clique no link da mensagem para confirmar o seu 
