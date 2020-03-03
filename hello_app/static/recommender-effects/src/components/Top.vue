@@ -36,15 +36,14 @@ export default {
   },
 
   methods: {
-    isEmailVerified() {
-      var result = false;
-      axios.get('/isemailverified')
+    async isEmailVerified() {
+      const result = await axios.get('/isemailverified')
         .then(function (response) {
-          result = response.data.result;
+          return response.data.result;
         })
         .catch(function (error) {
           console.log(error);
-          result = false;
+          return false;
         });
       return result;
     }
