@@ -9,7 +9,8 @@ from .dbfuncs import (
     create_tables, drop_tables, db_User_exists, db_User_add,
     db_Invitee_idFor, db_Invitee_add, db_put_gmail_send_auth,
     session_scope, db_get_GMailAuth, db_get_GMailAuth_by_state,
-    db_get_User_by_email, db_get_SpotifyAuth_by_state
+    db_get_User_by_email, db_get_SpotifyAuth_by_state,
+    db_is_User_email_verified
 )
 from .dbclasses import User, Invitee, GMailAuthSchema, SpotifyAuth
 from spotipy.oauth2 import SpotifyOAuth
@@ -151,7 +152,11 @@ def spot_callback():
     else:
             return jsonify({"msg": "Callback with error: {0}".format(error)}), 400
 
-
+@app.route("/isemailverified")
+@jwt_required
+def is_email_verified():
+    result = True if db_User_exists(get_jwt_identity()) else False
+    return jsonify({"result": result})
 
 @app.route("/spotauthorize")
 @jwt_required

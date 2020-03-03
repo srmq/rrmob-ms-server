@@ -88,3 +88,12 @@ def db_get_SpotifyAuth_by_state(state, session):
 
 def db_get_User_by_email(email, session):
     return session.query(User).filter(User.email == email).first()
+
+def db_is_User_email_verified(email):
+    result = False
+    with session_scope() as session:
+        user = db_get_User_by_email(email, session)
+        if user and user.email_verified:
+            result = True
+        
+    return result

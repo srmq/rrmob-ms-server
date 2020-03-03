@@ -1,6 +1,6 @@
 <template>
   <div v-if="loggedIn" class="top-view">
-    <Top />
+    <Top v-bind:loginInfo="loginInfo"/>
   </div>
   <div v-else class="login">
     <Login />
@@ -21,12 +21,12 @@ export default {
   },
   data: () => ({
     loggedIn: false,
-    accessToken: ''
+    loginInfo: {}
   }),
   //lifecycle hooks
   created() {
-    bus.$on('loggedIn', (accessToken) => {
-      this.accessToken = accessToken;
+    bus.$on('loggedIn', (loginInfo) => {
+      this.loginInfo = loginInfo;
       this.loggedIn = true;
     });
     bus.$on('loggedOut', () => { this.loggedIn = false; });

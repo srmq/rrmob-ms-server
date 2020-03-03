@@ -6,8 +6,11 @@
             Bem-vindo(a) ao Recommender Effects!
           </h1>
 
-          <p class="subheading font-weight-regular">
-            Você já está participando do nosso experimento! Aguarde novidades!
+          <p v-if="!isEmailVerified()" class="subheading font-weight-regular">
+            Foi-lhe enviada uma mensagem de verificação para seu endereço de e-mail
+            informado. Por favor, clique no link da mensagem para confirmar o seu 
+            endereço. Caso não receba a mensagem, clique neste link para enviarmos 
+            novamente.
           </p>
         </v-col>
       </v-row>
@@ -15,15 +18,32 @@
 </template>
 
 <script>
+import axios from 'axios';
 
 export default {
   name: 'Top',
 
+  props: ['loginInfo'],
+
   data: () => ({
     // TODO
   }),
-  methods: {
 
+  created() {
+    axios.defaults.headers.common = {'Authorization': `Bearer ${this.loginInfo.access_token}`};
+  },
+
+  methods: {
+    isEmailVerified() {
+      axios.get('/isemailverified')
+        .then(function (response) {
+          return response.data.result;
+        })
+        .catch(function (error) {
+          console.log(error);
+          return false;
+        });
+    }
   }    
 }
 </script>
