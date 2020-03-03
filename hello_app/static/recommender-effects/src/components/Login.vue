@@ -99,13 +99,12 @@ export default {
         return true;
       },
       doSignIn() {
-        const me = this;
         axios.post('/signin', {
           email: this.email,
           password: this.password
         })
-        .then(function (response) {
-          bus.$emit('loggedIn', {email: me.email, access_token: response.data.access_token});
+        .then((response) => {
+          bus.$emit('loggedIn', {email: this.email, access_token: response.data.access_token});
         })
         .catch(function(error) {
           console.log(error);
