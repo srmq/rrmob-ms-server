@@ -10,7 +10,7 @@
             <p  class="subheading font-weight-regular">
               Foi-lhe enviada uma mensagem de verificação para seu endereço de e-mail
               informado. Por favor, clique no link da mensagem para confirmar o seu 
-              endereço. Caso não receba a mensagem, clique neste link para enviarmos 
+              endereço. Caso não receba a mensagem, clique neste link FIXME para enviarmos 
               novamente.
             </p>
           </div>
