@@ -342,6 +342,30 @@ def signup():
         traceback.print_exc()
         return jsonify({"msg": msg}), 500
 
+@app.route('/getmyspotifyauth', methods=['GET'])
+@jwt_required
+def get_mySpotifyAuth():
+    user_addr = get_jwt_identity()
+    if not user_addr:
+        return jsonify({"msg": "Could not find user identity"}), 400
+
+    try:
+        with session_scope() as session:
+            user = db_get_User_by_email(user_addr, session)
+            if not user:
+                return jsonify({"msg": "Unknown user"}), 400
+    except Exception as e:
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
+        return jsonify({"msg": msg}), 500
+    else:
+        if not user.spotify_auth:
+            ret = None
+        else:
+            ret = user.spotify_auth.token_info
+        return jsonify(ret), 200
+
+
 @app.route('/getspotifyauth', methods=['POST'])
 def get_SpotifyAuth():
     root_pass = os.environ.get('ROOT_PASS', '')
