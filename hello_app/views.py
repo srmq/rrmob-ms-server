@@ -188,7 +188,7 @@ def spot_autorize():
         traceback.print_exc()
         return jsonify({"msg": msg}), 500
     else:
-        return redirect(auth_url)
+        return jsonify({"url": auth_url}), 200
 
 
 @app.route('/createtables', methods=['POST'])

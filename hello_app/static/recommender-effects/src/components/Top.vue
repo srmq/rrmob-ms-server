@@ -25,9 +25,23 @@
             </p>
           </div>
           <div v-else>
-            <p  class="subheading font-weight-regular">
-              Email verificado.
-            </p>
+            <!-- here email is verified -->
+            <div v-if="authLoadError">
+              <p  class="subheading font-weight-regular">
+                Houve um erro ao carregar informações de autenticação. Por favor, tente novamente mais tarde.
+              </p>
+            </div>
+            <div v-else-if="authLoading">
+              <p  class="subheading font-weight-regular">
+                Carregando informações de autenticação...
+              </p>
+            </div>
+            <div v-else>
+              <!-- auth info was loaded -->
+              <p  class="subheading font-weight-regular">
+                Informações de autenticação carregadas...
+              </p>
+            </div>
           </div>
         </v-col>
       </v-row>
@@ -46,9 +60,14 @@ export default {
     loading: true,
     errored: false,
     isEmailVerified: null,
+
     authLoading: true,
     authInfo: null,
-    authLoadError: false
+    authLoadError: false,
+
+    authChecking: true,
+    authValid: null,
+    authCheckError: false
   }),
 
   created() {
