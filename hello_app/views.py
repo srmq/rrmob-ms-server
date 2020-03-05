@@ -354,17 +354,15 @@ def get_mySpotifyAuth():
             user = db_get_User_by_email(user_addr, session)
             if not user:
                 return jsonify({"msg": "Unknown user"}), 400
+            elif not user.spotify_auth:
+                ret = None
+            else:
+                ret = user.spotify_auth.token_info
+            return jsonify(ret), 200  
     except Exception as e:
         msg = "An Error ocurred: " + str(e)
         traceback.print_exc()
         return jsonify({"msg": msg}), 500
-    else:
-        if not user.spotify_auth:
-            ret = None
-        else:
-            ret = user.spotify_auth.token_info
-        return jsonify(ret), 200
-
 
 @app.route('/getspotifyauth', methods=['POST'])
 def get_SpotifyAuth():
