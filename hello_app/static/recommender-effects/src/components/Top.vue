@@ -45,7 +45,10 @@ export default {
   data: () => ({
     loading: true,
     errored: false,
-    isEmailVerified: null
+    isEmailVerified: null,
+    authLoading: true,
+    authInfo: null,
+    authLoadError: false
   }),
 
   created() {
@@ -57,12 +60,25 @@ export default {
       .get('/isemailverified')
       .then(response => {
         this.isEmailVerified = response.data.result;
+        if (this.isEmailVerified) {
+          axios
+            .get('/getmyspotifyauth')
+            .then( response => {
+              this.authInfo = response.data;
+              console.log(this.authInfo);
+            })
+            .catch(error => {
+              this.authLoadError = true;
+              console.log(error);
+            })
+            .finally(() => this.authLoading = false);
+        }
       })
       .catch(error => {
         console.log(error);
         this.errored = true;
       })
-      .finally(() => this.loading = false)    
+      .finally(() => this.loading = false);
   }
 }
 </script>
