@@ -41,6 +41,12 @@ app.config['JWT_SECRET_KEY'] = hashlib.sha512(base64.b64encode((_root_pass).enco
 _root_pass = None
 
 jwt = JWTManager(app)
+
+my_spotify_scopes = 'user-read-email playlist-read-collaborative user-read-private playlist-modify-public user-top-read playlist-read-private user-follow-read user-read-recently-played playlist-modify-private user-library-read'
+client_id = os.environ.get('SPOTIPY_CLIENT_ID', '')
+client_secret = os.environ.get('SPOTIPY_CLIENT_SECRET', '')
+redirect_uri = os.environ.get('SPOTIPY_REDIRECT_URI', '')
+
  
 def send_confirmation_mail(send_addr, fullname, emailaddr, user_verify_code):
     def create_confirmation_message(to_name, to_address, verification_code):
@@ -136,11 +142,7 @@ def spot_callback():
                 elif (datetime.now() - spotifyAuth.state_issued_at).total_seconds() > 300:
                     raise Exception("Received state is expired")
                 else:
-                    client_id = os.environ.get('SPOTIPY_CLIENT_ID', '')
-                    client_secret = os.environ.get('SPOTIPY_CLIENT_SECRET', '')
-                    redirect_uri = os.environ.get('SPOTIPY_REDIRECT_URI', '')
-                    my_scopes = 'user-read-email playlist-read-collaborative user-read-private playlist-modify-public user-top-read playlist-read-private user-follow-read user-read-recently-played playlist-modify-private user-library-read'
-                    sp_oauth = SpotifyOAuth(client_id, client_secret, redirect_uri, state=my_state, scope=my_scopes)
+                    sp_oauth = SpotifyOAuth(client_id, client_secret, redirect_uri, state=my_state, scope=my_spotify_scopes)
                     spotifyAuth.token_info = sp_oauth.get_access_token(code)
                     spotifyAuth.state = None
         except Exception as e:
@@ -161,13 +163,9 @@ def is_email_verified():
 @app.route("/spotauthorize")
 @jwt_required
 def spot_autorize():
-    client_id = os.environ.get('SPOTIPY_CLIENT_ID', '')
-    client_secret = os.environ.get('SPOTIPY_CLIENT_SECRET', '')
-    redirect_uri = os.environ.get('SPOTIPY_REDIRECT_URI', '')
     my_state = uuid.uuid4().hex
-    my_scopes = 'user-read-email playlist-read-collaborative user-read-private playlist-modify-public user-top-read playlist-read-private user-follow-read user-read-recently-played playlist-modify-private user-library-read'
 
-    sp_oauth = SpotifyOAuth(client_id, client_secret, redirect_uri, state=my_state, scope=my_scopes)
+    sp_oauth = SpotifyOAuth(client_id, client_secret, redirect_uri, state=my_state, scope=my_spotify_scopes)
     auth_url = sp_oauth.get_authorize_url()
 
     my_state = uuid.uuid4().hex
@@ -342,9 +340,9 @@ def signup():
         traceback.print_exc()
         return jsonify({"msg": msg}), 500
 
-@app.route('/getmyspotifyauth', methods=['GET'])
+@app.route('/getmyspotifyaccesstoken', methods=['GET'])
 @jwt_required
-def get_mySpotifyAuth():
+def get_mySpotifyAcessToken():
     user_addr = get_jwt_identity()
     if not user_addr:
         return jsonify({"msg": "Could not find user identity"}), 400
@@ -354,10 +352,18 @@ def get_mySpotifyAuth():
             user = db_get_User_by_email(user_addr, session)
             if not user:
                 return jsonify({"msg": "Unknown user"}), 400
-            elif not user.spotify_auth:
-                ret = None
-            else:
-                ret = user.spotify_auth.token_info
+            ret = None
+            if user.spotify_auth:
+                if user.spotify_auth.token_info:
+                    sp_oauth = SpotifyOAuth(client_id, client_secret, redirect_uri, scope=my_spotify_scopes)
+                    if sp_oauth.is_token_expired(user.spotify_auth.token_info):
+                        if 'refresh_token' in user.spotify_auth.token_info:
+                            newInfo = sp_oauth.refresh_access_token(user.spotify_auth.token_info['refresh_token'])
+                            if 'refresh_token' not in newInfo:
+                                newInfo['refresh_token'] = user.spotify_auth.token_info['refresh_token']
+                            user.spotify_auth.token_info = newInfo
+                    if 'access_token' in user.spotify_auth.token_info:
+                        ret = {"access_token": user.spotify_auth.token_info['access_token']}
             return jsonify(ret), 200  
     except Exception as e:
         msg = "An Error ocurred: " + str(e)

@@ -62,13 +62,63 @@ export default {
     isEmailVerified: null,
 
     authLoading: true,
-    authInfo: null,
+    authAccessToken: null,
     authLoadError: false,
 
     authChecking: true,
-    authValid: null,
+    authValid: false,
     authCheckError: false
   }),
+
+  methods: {
+    verifySpotifyAuth() {
+      if (this.authAccessToken == null) {
+        this.authChecking = false;
+        this.authValid = false;
+        this.authCheckError = false;
+      } else {
+        this.authChecking = true;
+        const myAxios = axios.create({
+          headers: {
+            common: {
+              'Authorization': 'Bearer ' + this.authAccessToken
+            }
+          }
+        });
+        myAxios.get('https://api.spotify.com/v1/me')
+        .then(response => {
+          if(response.data && ('email' in response.data)) {
+            this.authValid = true;
+          } else {
+            this.authValid = false;
+          }
+          console.log(response.data);
+        })
+        .catch(error => {
+          this.authCheckError = true;
+          console.log(error);
+        })
+        .finally(() => this.authChecking = false);
+      }
+    },
+    getMySpotifyAuth() {
+      axios
+        .get('/getmyspotifyaccesstoken')
+        .then( response => {
+          if ('access_token' in response.data) {
+            this.authAccessToken = response.data.access_token;
+          }
+          
+          console.log(response);
+          verifySpotifyAuth();
+        })
+        .catch(error => {
+          this.authLoadError = true;
+          console.log(error);
+        })
+        .finally(() => this.authLoading = false);
+    }
+  },
 
   created() {
     axios.defaults.headers.common = {'Authorization': `Bearer ${this.loginInfo.access_token}`};
@@ -80,17 +130,7 @@ export default {
       .then(response => {
         this.isEmailVerified = response.data.result;
         if (this.isEmailVerified) {
-          axios
-            .get('/getmyspotifyauth')
-            .then( response => {
-              this.authInfo = response.data;
-              console.log(this.authInfo);
-            })
-            .catch(error => {
-              this.authLoadError = true;
-              console.log(error);
-            })
-            .finally(() => this.authLoading = false);
+          getMySpotifyAuth();
         }
       })
       .catch(error => {
