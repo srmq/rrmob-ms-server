@@ -127,7 +127,7 @@ export default {
       axios
         .get('/getmyspotifyaccesstoken')
         .then( response => {
-          if ('access_token' in response.data) {
+          if (response.data != null && 'access_token' in response.data) {
             this.authAccessToken = response.data.access_token;
           }
           
