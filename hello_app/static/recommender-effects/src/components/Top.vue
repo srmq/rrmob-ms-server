@@ -49,7 +49,7 @@
               </div>
               <div v-else>
                 <div v-if="authUrlLoading">
-                  {{authUrlMessage}}
+                  {{authUrlMessage()}}
                 </div>
                 <div v-else-if="authUrlErrored">
                   Erro ao carregar URL de autenticação. Por favor tente novamente mais tarde...
@@ -132,16 +132,14 @@ export default {
           }
           
           console.log(response);
-          verifySpotifyAuth();
+          this.verifySpotifyAuth();
         })
         .catch(error => {
           this.authLoadError = true;
           console.log(error);
         })
         .finally(() => this.authLoading = false);
-    }
-  },
-  computed: {
+    },
     authUrlMessage() {
       axios
         .get('/spotauthorize')
@@ -169,7 +167,7 @@ export default {
       .then(response => {
         this.isEmailVerified = response.data.result;
         if (this.isEmailVerified) {
-          getMySpotifyAuth();
+          this.getMySpotifyAuth();
         }
       })
       .catch(error => {
