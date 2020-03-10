@@ -38,9 +38,27 @@
             </div>
             <div v-else>
               <!-- auth info was loaded -->
-              <p  class="subheading font-weight-regular">
-                Informações de autenticação carregadas...
-              </p>
+              <div v-if="authChecking">
+                Checando informações de autenticação...
+              </div>
+              <div v-else-if="authCheckError">
+                Erro ao checar autenticação com Spotify. Por favor tente novamente mais tarde.
+              </div>
+              <div v-else-if="authValid">
+                Obrigado! Você já está participando do nosso experimento. Aguarde novidades!
+              </div>
+              <div v-else>
+                <div v-if="authUrlLoading">
+                  {{authUrlMessage}}
+                </div>
+                <div v-else-if="authUrlErrored">
+                  Erro ao carregar URL de autenticação. Por favor tente novamente mais tarde...
+                </div>
+                <div v-else>
+                  Por favor, acesse <a v-bind:href="authUrl">este link</a> para conceder autorização ao Recommender Effects para acessar suas informações no Spotify. 
+                  Os dados acessados serão utilizados exclusivamente no contexto do experimento.
+                </div>
+              </div>
             </div>
           </div>
         </v-col>
@@ -67,7 +85,11 @@ export default {
 
     authChecking: true,
     authValid: false,
-    authCheckError: false
+    authCheckError: false,
+
+    authUrlLoading: true,
+    authUrlErrored: false,
+    authUrl: ''
   }),
 
   methods: {
@@ -117,6 +139,23 @@ export default {
           console.log(error);
         })
         .finally(() => this.authLoading = false);
+    }
+  },
+  computed: {
+    authUrlMessage() {
+      axios
+        .get('/spotauthorize')
+        .then( response => {
+          if ('url' in response.data) {
+            this.authUrl = response.data.url;
+          }
+        })
+        .catch(error => {
+          this.authUrlErrored = true;
+          console.log(error);
+        })
+        .finally(() => this.authUrlLoading = false);
+      return 'Carregando URL de autenticação...';
     }
   },
 
