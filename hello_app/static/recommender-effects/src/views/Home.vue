@@ -3,7 +3,7 @@
     <Top v-bind:loginInfo="loginInfo"/>
   </div>
   <div v-else class="login">
-    <Login />
+    <Login v-bind:stateLogin="stateLogin" />
   </div>
 
 </template>
@@ -21,7 +21,8 @@ export default {
   },
   data: () => ({
     loggedIn: false,
-    loginInfo: {}
+    loginInfo: {},
+    stateLogin: ''
   }),
   //lifecycle hooks
   created() {
@@ -30,6 +31,8 @@ export default {
       this.loggedIn = true;
     });
     bus.$on('loggedOut', () => { this.loggedIn = false; });
+    this.stateLogin = this.$route.query.state;
+    console.log('STATE: ' + this.stateLogin);
   }  
 }
 </script>

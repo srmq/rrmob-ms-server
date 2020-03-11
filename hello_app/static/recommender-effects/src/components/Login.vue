@@ -71,6 +71,8 @@ import { bus } from '../main'
 export default {
   name: 'Login',
 
+  props: ['stateLogin'],
+
   data: () => ({
     lazy: true,
     valid: true,
