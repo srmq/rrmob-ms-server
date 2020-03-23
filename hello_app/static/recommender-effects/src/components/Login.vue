@@ -130,6 +130,7 @@ export default {
         }
       },
       created() {
+        console.log("Login stateLogin received: " + this.stateLogin)
         if (this.stateLogin) {
           this.stateChecking = true;
           axios.post('/spotifystatesignin', {
