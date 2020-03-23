@@ -172,7 +172,6 @@ def spot_autorize():
     sp_oauth = SpotifyOAuth(client_id, client_secret, redirect_uri, state=my_state, scope=my_spotify_scopes)
     auth_url = sp_oauth.get_authorize_url()
 
-    my_state = uuid.uuid4().hex
     state_issued_at = datetime.now()
 
     try:
