@@ -259,7 +259,7 @@ def confirm_email():
     else:
         return jsonify({"msg": "Success"}), 200
 
-@app.route('/spotifystatesignin', method=['POST'])
+@app.route('/spotifystatesignin', methods=['POST'])
 def spotify_state_signin():
     if not request.is_json:
         return jsonify({"msg": "Malformed request, expecting JSON"}), 400
