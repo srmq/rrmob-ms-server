@@ -136,6 +136,9 @@ def spot_callback():
     if code and my_state and not error:
         try:
             with session_scope() as session:
+                log = logging.getLogger()
+                log.debug("Received state from spotify was: %s\n", my_state)
+
                 spotifyAuth = db_get_SpotifyAuth_by_state(my_state, session)
                 if not spotifyAuth:
                     raise Exception("Invalid state received")
@@ -182,6 +185,8 @@ def spot_autorize():
                 user.spotify_auth = SpotifyAuth(user_id = user.id)
             user.spotify_auth.state = my_state
             user.spotify_auth.state_issued_at = state_issued_at
+            log = logging.getLogger()
+            log.debug("Recorded state in db was: %s\n", my_state)
     except Exception as e:
         msg = "An Error ocurred: " + str(e)
         traceback.print_exc()
