@@ -6,7 +6,10 @@
             <v-toolbar color="primary" dark flat >
             <v-toolbar-title>Recommender Effects</v-toolbar-title>
             </v-toolbar>
-            <v-card-text>
+            <v-card-text v-if="stateChecking">
+            <div>Trying to log in with Spotify state. Please wait...
+            </v-card-text>
+            <v-card-text v-else>
             <v-form v-model="valid" :lazy-validation="lazy">
                 <span v-if="firstAccess">
                 <v-text-field
@@ -90,7 +93,11 @@ export default {
       v => !!v || 'Senha obrigatória',
     ],
     passwordCheck : '',
-    firstAccess: false, 
+    firstAccess: false,
+    
+    stateChecking: false,
+    stateCheckError: false,
+    
     errors : []
   }),
   methods: {
@@ -120,6 +127,22 @@ export default {
           } else {
             this.doSignIn();
           }
+        }
+      },
+      created() {
+        if (this.stateLogin) {
+          this.stateChecking = true;
+          axios.post('/spotifystatesignin', {
+            state: this.stateLogin
+          })
+          .then((response) => {
+            bus.$emit('loggedIn', {email: response.data.email, access_token: response.data.access_token});
+          })
+          .catch(function(error) {
+            this.stateCheckError = true;
+            console.log(error);
+          })
+          .finally(() => this.stateChecking = false);
         }
       }
   }    

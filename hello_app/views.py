@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from flask import (
     Flask, redirect, request, render_template,
-    jsonify
+    jsonify, url_for
 )
 from . import app
 from .dbfuncs import (
@@ -144,13 +144,14 @@ def spot_callback():
                 else:
                     sp_oauth = SpotifyOAuth(client_id, client_secret, redirect_uri, state=my_state, scope=my_spotify_scopes)
                     spotifyAuth.token_info = sp_oauth.get_access_token(code)
-                    spotifyAuth.state = None
+                    #spotifyAuth.state = None
         except Exception as e:
             msg = "An Error ocurred: " + str(e)
             traceback.print_exc()
             return jsonify({"msg": msg}), 500
         else:
-            return jsonify({"msg": "Success"}), 200
+            return redirect(url_for('catch_all', state = my_state))
+            #return jsonify({"msg":  "Success"}), 200
     else:
             return jsonify({"msg": "Callback with error: {0}".format(error)}), 400
 
@@ -257,6 +258,34 @@ def confirm_email():
         return jsonify({"msg": msg}), 500
     else:
         return jsonify({"msg": "Success"}), 200
+
+@app.route('/spotifystatesignin', method=['POST'])
+def spotify_state_signin():
+    if not request.is_json:
+        return jsonify({"msg": "Malformed request, expecting JSON"}), 400
+
+    state = request.json.get('state', None)
+    if not state:
+        return jsonify({"msg": "Missing state parameter"}), 400
+
+    try:
+        with session_scope() as session:
+            spotifyAuth = db_get_SpotifyAuth_by_state(state, session)
+            if not spotifyAuth:
+                raise Exception("Invalid state received")
+            elif (datetime.now() - spotifyAuth.state_issued_at).total_seconds() > 300:
+                raise Exception("Received state is expired")
+            else:
+                spotifyAuth.state = None
+                user = spotifyAuth.user
+                if not user:
+                    return jsonify({"msg": "Invalid user or password"}), 401
+                access_token = create_access_token(identity=user.email)
+                return jsonify(email=user.email, access_token=access_token), 200            
+    except Exception as e:
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
+        return jsonify({"msg": msg}), 500
 
 @app.route('/signin', methods=['POST'])
 def signin():
