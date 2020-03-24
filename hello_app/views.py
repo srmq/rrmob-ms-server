@@ -373,13 +373,7 @@ def signup():
         traceback.print_exc()
         return jsonify({"msg": msg}), 500
 
-@app.route('/getmyspotifyaccesstoken', methods=['GET'])
-@jwt_required
-def get_mySpotifyAcessToken():
-    user_addr = get_jwt_identity()
-    if not user_addr:
-        return jsonify({"msg": "Could not find user identity"}), 400
-
+def access_token_for_email(user_addr):
     try:
         with session_scope() as session:
             user = db_get_User_by_email(user_addr, session)
@@ -406,6 +400,16 @@ def get_mySpotifyAcessToken():
         traceback.print_exc()
         return jsonify({"msg": msg}), 500
 
+
+@app.route('/getmyspotifyaccesstoken', methods=['GET'])
+@jwt_required
+def get_mySpotifyAcessToken():
+    user_addr = get_jwt_identity()
+    if not user_addr:
+        return jsonify({"msg": "Could not find user identity"}), 400
+    else:
+        return access_token_for_email(user_addr)
+
 @app.route('/getspotifyauth', methods=['POST'])
 def get_SpotifyAuth():
     root_pass = os.environ.get('ROOT_PASS', '')
@@ -421,21 +425,8 @@ def get_SpotifyAuth():
     user_addr = request.json.get('email', None)
     if not user_addr:
         return jsonify({"msg": "Missing email parameter"}), 400
-
-    try:
-        with session_scope() as session:
-            user = db_get_User_by_email(user_addr, session)
-            if not user:
-                return jsonify({"msg": "Unknown email"}), 400
-            if not user.spotify_auth:
-                ret = None
-            else:
-                ret = user.spotify_auth.token_info
-            return jsonify(ret), 200
-    except Exception as e:
-        msg = "An Error ocurred: " + str(e)
-        traceback.print_exc()
-        return jsonify({"msg": msg}), 500
+    else:
+        return access_token_for_email(user_addr)
 
 
 @app.route('/getgmailauth', methods=['GET'])

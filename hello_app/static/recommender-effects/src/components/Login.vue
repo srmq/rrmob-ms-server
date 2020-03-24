@@ -140,7 +140,8 @@ export default {
         state: this.stateLogin
       })
       .then((response) => {
-        bus.$emit('loggedIn', {email: response.data.email, access_token: response.data.access_token});
+        bus.$emit('loggedIn', {email: response.data.email, 
+                               access_token: response.data.access_token});
       })
       .catch(function(error) {
         this.stateCheckError = true;
