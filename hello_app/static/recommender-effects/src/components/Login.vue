@@ -101,51 +101,53 @@ export default {
     errors : []
   }),
   methods: {
-      passwordsOk(checkPassword) {
-        if (!(checkPassword == this.password)) {
-          return "As senhas não coincidem";
-        }
-        return true;
-      },
-      doSignIn() {
-        axios.post('/signin', {
-          email: this.email,
-          password: this.password
-        })
-        .then((response) => {
-          bus.$emit('loggedIn', {email: this.email, access_token: response.data.access_token});
-        })
-        .catch(function(error) {
-          console.log(error);
-        });
-      },
-      submitIfEnter(event) {
-        if (event.key == 'Enter' && this.valid) {
-          if (this.firstAccess) {
-            //FIXME TODO signup
-            console.log('do signup');
-          } else {
-            this.doSignIn();
-          }
-        }
-      },
-      created() {
-        console.log("Login stateLogin received: " + this.stateLogin)
-        if (this.stateLogin) {
-          this.stateChecking = true;
-          axios.post('/spotifystatesignin', {
-            state: this.stateLogin
-          })
-          .then((response) => {
-            bus.$emit('loggedIn', {email: response.data.email, access_token: response.data.access_token});
-          })
-          .catch(function(error) {
-            this.stateCheckError = true;
-            console.log(error);
-          })
-          .finally(() => this.stateChecking = false);
+    passwordsOk(checkPassword) {
+      if (!(checkPassword == this.password)) {
+        return "As senhas não coincidem";
+      }
+      return true;
+    },
+    doSignIn() {
+      axios.post('/signin', {
+        email: this.email,
+        password: this.password
+      })
+      .then((response) => {
+        bus.$emit('loggedIn', {email: this.email, access_token: response.data.access_token});
+      })
+      .catch(function(error) {
+        console.log(error);
+      });
+    },
+    submitIfEnter(event) {
+      if (event.key == 'Enter' && this.valid) {
+        if (this.firstAccess) {
+          //FIXME TODO signup
+          console.log('do signup');
+        } else {
+          this.doSignIn();
         }
       }
-  }    
-}
+    }
+  },
+
+  //lifecycle hooks
+  created() {
+    console.log("Login stateLogin received: " + this.stateLogin)
+    if (this.stateLogin) {
+      this.stateChecking = true;
+      axios.post('/spotifystatesignin', {
+        state: this.stateLogin
+      })
+      .then((response) => {
+        bus.$emit('loggedIn', {email: response.data.email, access_token: response.data.access_token});
+      })
+      .catch(function(error) {
+        this.stateCheckError = true;
+        console.log(error);
+      })
+      .finally(() => this.stateChecking = false);
+    }
+  }
+}    
 </script>
