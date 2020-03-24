@@ -396,7 +396,7 @@ def get_mySpotifyAcessToken():
                                 if 'refresh_token' not in newInfo:
                                     newInfo['refresh_token'] = user.spotify_auth.token_info['refresh_token']
                                 user.spotify_auth.token_info = newInfo
-                               if 'access_token' in user.spotify_auth.token_info:
+                                if 'access_token' in user.spotify_auth.token_info:
                                     ret = {"access_token": user.spotify_auth.token_info['access_token']}
                     elif 'access_token' in user.spotify_auth.token_info:
                         ret = {"access_token": user.spotify_auth.token_info['access_token']}
