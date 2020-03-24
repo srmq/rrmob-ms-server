@@ -392,11 +392,12 @@ def get_mySpotifyAcessToken():
                     if sp_oauth.is_token_expired(user.spotify_auth.token_info):
                         if 'refresh_token' in user.spotify_auth.token_info:
                             newInfo = sp_oauth.refresh_access_token(user.spotify_auth.token_info['refresh_token'])
-                            if 'refresh_token' not in newInfo:
-                                newInfo['refresh_token'] = user.spotify_auth.token_info['refresh_token']
-                            user.spotify_auth.token_info = newInfo
-                    if 'access_token' in user.spotify_auth.token_info:
-                        ret = {"access_token": user.spotify_auth.token_info['access_token']}
+                            if newInfo:
+                                if 'refresh_token' not in newInfo:
+                                    newInfo['refresh_token'] = user.spotify_auth.token_info['refresh_token']
+                                user.spotify_auth.token_info = newInfo
+                                if 'access_token' in user.spotify_auth.token_info:
+                                    ret = {"access_token": user.spotify_auth.token_info['access_token']}
             return jsonify(ret), 200  
     except Exception as e:
         msg = "An Error ocurred: " + str(e)
