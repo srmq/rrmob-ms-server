@@ -49,10 +49,12 @@ export default {
   }),
   methods: {
     doRootSignIn() {
+      console.log('root sigin called')
       axios.post('/rootsignin', {
         rootpass: this.password
       })
       .then((response) => {
+        console.log('root login: success')
         bus.$emit('rootLoggedIn', {root_token: response.data.root_token});
       })
       .catch(function(error) {
@@ -65,9 +67,5 @@ export default {
       }
     }
   },
-
-  //lifecycle hooks
-  created() {
-  }
 }    
 </script>
