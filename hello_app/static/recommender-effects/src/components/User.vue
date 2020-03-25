@@ -1,13 +1,11 @@
 <template>
-  <div v-if="usrLoading">
-    Carregando usuários...
-  </div>
-  <div v-else-if="usrLoadError">
-    Erro ao carregar usuários, por favor, tente novamente mais tarde.
+  <div v-if="!usrLoadError">
+    <v-data-table item-key="id" class="elevation-1" loading items="allUsers">  
+    </v-data-table>
   </div>
   <div v-else>
-    Carreguei!
-  </div>    
+    Erro ao carregar usuários, por favor, tente novamente mais tarde.
+  </div>
 </template>
 
 <script>
