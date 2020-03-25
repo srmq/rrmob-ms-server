@@ -10,7 +10,6 @@
 <script>
 import { bus } from '../main'
 // @ is an alias to /src
-import Login from '@/components/Login.vue'
 import RootLogin from '@/components/RootLogin.vue'
 import User from '@/components/User.vue'
 
