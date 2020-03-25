@@ -15,7 +15,7 @@ class User(Base):
     email = Column(String(320), nullable=False, unique=True, index=True)
     email_verified = Column(Boolean, default = False, server_default="FALSE")
     verify_code = Column(String(32))
-    invitee_id = Column(Integer, ForeignKey('invitees.id'), nullable=False)
+    invitee_id = Column(Integer, ForeignKey('invitees.id'), nullable=False, unique=True)
     pass_hash = Column(String(128), nullable=False)
     pass_salt = Column(String(32), nullable=False)
     spot_id = Column(String(1024))
@@ -29,6 +29,7 @@ class Invitee(Base):
     __tablename__ = 'invitees'
     id = Column('id', Integer, primary_key=True)
     email = Column(String(320), nullable=False, unique=True, index=True)
+    registered_usr = relationship("User", back_populates="invite", uselist=False)
 
     def __repr__(self):
         return "{\"id\": %s, \"email\" = %s}" % (self.id, self.email)
@@ -60,3 +61,4 @@ class SpotifyAuth(Base):
     token_info = Column(JSONB)
 
 User.spotify_auth = relationship("SpotifyAuth", uselist=False, back_populates="user")
+User.invite = relationship("Invitee", back_populates="registered_usr")

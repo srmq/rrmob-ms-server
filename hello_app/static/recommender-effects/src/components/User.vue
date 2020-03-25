@@ -1,5 +1,13 @@
 <template>
-    
+  <div v-if="usrLoading">
+    Carregando usuários...
+  </div>
+  <div v-else-if="usrLoadError">
+    Erro ao carregar usuários, por favor, tente novamente mais tarde.
+  </div>
+  <div v-else>
+    Carreguei!
+  </div>    
 </template>
 
 <script>
@@ -11,7 +19,9 @@ export default {
     props: ['rootloginInfo'],
 
   data: () => ({
-      
+      allUsers : null,
+      usrLoading : true,
+      usrLoadError: false
   }),
 
   methods: {
@@ -20,6 +30,22 @@ export default {
 
   created() {
     axios.defaults.headers.common = {'Authorization': `Bearer ${this.rootloginInfo.root_token}`};
+  },
+
+  mounted() {
+    axios
+      .get('/loadUsers')
+      .then( response => {
+        allUsers = response.data;
+        
+        console.log(response);
+      })
+      .catch(error => {
+        this.usrLoadError = true;
+        console.log(error);
+      })
+      .finally(() => this.usrLoading = false);
+
   },
 
 }

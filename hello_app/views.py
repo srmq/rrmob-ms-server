@@ -10,7 +10,7 @@ from .dbfuncs import (
     db_Invitee_idFor, db_Invitee_add, db_put_gmail_send_auth,
     session_scope, db_get_GMailAuth, db_get_GMailAuth_by_state,
     db_get_User_by_email, db_get_SpotifyAuth_by_state,
-    db_is_User_email_verified
+    db_is_User_email_verified, db_get_AllInvitees
 )
 from .dbclasses import User, Invitee, GMailAuthSchema, SpotifyAuth
 from spotipy.oauth2 import SpotifyOAuth
@@ -262,6 +262,29 @@ def confirm_email():
         return jsonify({"msg": msg}), 500
     else:
         return jsonify({"msg": "Success"}), 200
+
+@app.route('/loadUsers', methods=['GET'])
+@jwt_required
+def load_users():
+    if get_jwt_identity() != "root":
+        return jsonify({"msg": "Unauthorized user"}), 401
+    try:
+        with session_scope() as session:
+            allInvitees = db_get_AllInvitees(session)
+            result = []
+            for invitee in allInvitees:
+                obj = {"id": invitee.id, "invited_email": invitee.email}
+                if invitee.registered_usr:
+                    obj["fullname"] = invitee.registered_usr.fullname
+                    obj["reg_email"] = invitee.registered_usr.email
+                    obj["verif_email"] = invitee.registered_usr.email_verified
+                result.append(obj)
+    except Exception as e:
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
+        return jsonify({"msg": msg}), 500
+    else:
+        return jsonify(result), 200
 
 @app.route('/spotifystatesignin', methods=['POST'])
 def spotify_state_signin():
