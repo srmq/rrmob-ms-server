@@ -291,6 +291,19 @@ def spotify_state_signin():
         traceback.print_exc()
         return jsonify({"msg": msg}), 500
 
+@app.route('/rootsignin', methods=['POST'])
+def root_sigin():
+    if not request.is_json:
+        return jsonify({"msg": "Malformed request, expecting JSON"}), 400
+    root_pass = os.environ.get('ROOT_PASS', '')
+    rcvd_pass = request.json.get('rootpass', None)
+    if not rcvd_pass:
+        return jsonify({"msg": "Missing root password parameter"}), 400
+    if not rcvd_pass == root_pass:
+        return jsonify({"msg": "Invalid root password received"}), 401
+    root_token = create_access_token(identity="root")
+    return jsonify(root_token=root_token), 200
+
 @app.route('/signin', methods=['POST'])
 def signin():
     if not request.is_json:
