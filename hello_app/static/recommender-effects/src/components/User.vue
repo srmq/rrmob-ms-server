@@ -1,6 +1,6 @@
 <template>
   <div v-if="!usrLoadError">
-    <v-data-table item-key="id" class="elevation-1" loading items="allUsers">  
+    <v-data-table :item-key="id" class="elevation-1" loading :items="allUsers">  
     </v-data-table>
   </div>
   <div v-else>
