@@ -12,7 +12,7 @@
                 id="password"
                 label="Root password"
                 v-model="password"
-                v-on:keyup="(event) => { if (valid) submitIfEnter(event); }" 
+                v-on:keyup="submitIfEnter" 
                 :rules="passwordRules"
                 prepend-icon="lock"
                 type="password"
