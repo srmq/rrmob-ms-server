@@ -41,7 +41,22 @@
     </v-card-title>      
       <v-data-table :item-key="id" class="elevation-1" 
                     loading="usrLoading" :items="allUsers"
-                    :headers="headers" :search="search">  
+                    :headers="headers" :search="search">
+        <template v-slot:item.actions="{ item }">
+          <v-icon
+            small
+            class="mr-2"
+            @click="editItem(item)"
+          >
+            mdi-pencil
+          </v-icon>
+          <v-icon
+            small
+            @click="deleteItem(item)"
+          >
+            mdi-delete
+          </v-icon>
+        </template>                      
       </v-data-table>
     </v-card>
   </div>
@@ -92,6 +107,17 @@ export default {
       }
       this.close();
     },    
+
+    editItem (item) {
+      this.editedIndex = this.allUsers.indexOf(item)
+      this.editedItem = Object.assign({}, item)
+      this.dialog = true
+    },
+
+    deleteItem (item) {
+      const index = this.allUsers.indexOf(item)
+      confirm('Are you sure you want to delete this User? ALL HER DATA WILL BE LOST') && this.allUsers.splice(index, 1)
+    },
   },
 
   created() {
