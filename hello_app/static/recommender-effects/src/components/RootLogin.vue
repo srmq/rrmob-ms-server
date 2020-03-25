@@ -7,7 +7,7 @@
             <v-toolbar-title>Recommender Effects</v-toolbar-title>
             </v-toolbar>
             <v-card-text>
-            <v-form v-model="valid" :lazy-validation="lazy">
+            <v-form v-on:submit.prevent v-model="valid" :lazy-validation="lazy">
                 <v-text-field
                 id="password"
                 label="Root password"
