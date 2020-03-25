@@ -1,6 +1,8 @@
 <template>
   <div v-if="!usrLoadError">
-    <v-data-table :item-key="id" class="elevation-1" loading :items="allUsers">  
+    <v-data-table :item-key="id" class="elevation-1" 
+                  loading :items="allUsers"
+                  :headers="headers">  
     </v-data-table>
   </div>
   <div v-else>
@@ -18,6 +20,11 @@ export default {
 
   data: () => ({
       allUsers : [],
+      headers: [{text: 'Invited Email', value: 'invited_email'},
+                {text: 'Name', value: 'fullname'},
+                {text: 'Registered Email', value: 'reg_email'},
+                {text: 'Email verified?', value: 'verif_email'}
+               ],
       usrLoading : true,
       usrLoadError: false
   }),
