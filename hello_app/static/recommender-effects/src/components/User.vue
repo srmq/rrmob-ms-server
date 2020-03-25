@@ -36,7 +36,7 @@ export default {
     axios
       .get('/loadUsers')
       .then( response => {
-        allUsers = response.data;
+        this.allUsers = response.data;
         
         console.log(response);
       })
