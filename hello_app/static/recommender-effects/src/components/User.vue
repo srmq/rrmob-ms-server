@@ -82,7 +82,8 @@ export default {
     headers: [{text: 'Invited Email', value: 'invited_email'},
               {text: 'Name', value: 'fullname'},
               {text: 'Registered Email', value: 'reg_email'},
-              {text: 'Email verified?', value: 'verif_email'}
+              {text: 'Email verified?', value: 'verif_email'},
+              {text: 'Actions', value: 'actions', sortable: false }
               ],
     usrLoading : true,
     usrLoadError: false,
