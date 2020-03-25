@@ -62,6 +62,7 @@ export default {
       });
     },
     submitIfEnter(event) {
+      console.log('called submitIfEnter')
       if (event.key == 'Enter' && this.valid) {
         this.doRootSignIn();
       }
