@@ -11,6 +11,33 @@
           single-line
           hide-details
         ></v-text-field>
+        <v-spacer></v-spacer>
+        <v-dialog v-model="dialog" max-width="500px">
+          <template v-slot:activator="{ on }">
+            <v-btn color="primary" dark class="mb-2" v-on="on">New Invitee</v-btn>
+          </template>
+          <v-card>
+            <v-card-title>
+              <span class="headline">Add Invitee</span>
+            </v-card-title>            
+
+            <v-card-text>
+              <v-container>
+                <v-row>
+                  <v-col cols="12" sm="6" md="4">
+                    <v-text-field v-model="editedItem.invited_email" label="Invitee e-mail"></v-text-field>
+                  </v-col>
+                </v-row>
+              </v-container>
+            </v-card-text>
+
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="blue darken-1" text @click="close">Cancel</v-btn>
+              <v-btn color="blue darken-1" text @click="save">Save</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
     </v-card-title>      
       <v-data-table :item-key="id" class="elevation-1" 
                     loading="usrLoading" :items="allUsers"
@@ -34,17 +61,37 @@ export default {
   data: () => ({
     search: '',
     allUsers : [],
+    editedItem : {invited_email: '', fullname: '', reg_email: '', verif_email: false},
+    defaultItem : {invited_email: '', fullname: '', reg_email: '', verif_email: false},
+    editedIntex: -1,
     headers: [{text: 'Invited Email', value: 'invited_email'},
               {text: 'Name', value: 'fullname'},
               {text: 'Registered Email', value: 'reg_email'},
               {text: 'Email verified?', value: 'verif_email'}
               ],
     usrLoading : true,
-    usrLoadError: false
+    usrLoadError: false,
+
+    dialog: false
   }),
 
   methods: {
+    close () {
+      this.dialog = false;
+      setTimeout(() => {
+        this.editedItem = Object.assign({}, this.defaultItem)
+        this.editedIndex = -1
+      }, 300);
+    },
 
+    save () {
+      if (this.editedIndex > -1) {
+        Object.assign(this.allUsers[this.editedIndex], this.editedItem);
+      } else {
+        this.allUsers.push(this.editedItem);
+      }
+      this.close();
+    },    
   },
 
   created() {
