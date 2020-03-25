@@ -56,7 +56,10 @@
           >
             mdi-delete
           </v-icon>
-        </template>                      
+        </template>
+        <template v-slot:no-data>
+          <div>No data.</div>
+        </template>                              
       </v-data-table>
     </v-card>
   </div>
