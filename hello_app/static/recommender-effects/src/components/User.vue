@@ -17,7 +17,7 @@ export default {
     props: ['rootloginInfo'],
 
   data: () => ({
-      allUsers : null,
+      allUsers : [],
       usrLoading : true,
       usrLoadError: false
   }),
