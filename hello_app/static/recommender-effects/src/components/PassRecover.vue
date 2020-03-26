@@ -13,7 +13,7 @@
                 label="E-mail cadastrado"
                 v-model="email"
                 v-on:keyup="submitIfEnter" 
-                :rules="email"
+                :rules="emailRules"
                 prepend-icon="email"
                 type="text"
                 required
