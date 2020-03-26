@@ -37,8 +37,8 @@ export default {
   name: 'PassRecover',
 
   data: () => ({
-    lazy: false,
-    valid: false,
+    lazy: true,
+    valid: true,
 
     email : '',
     emailRules : [
