@@ -56,17 +56,23 @@
             </v-form>
             </v-card-text>
             <v-card-actions>
-            <div v-if="!firstAccess">
-              <a v-on:click.prevent="firstAccess = true">Primeiro acesso?</a>
-              <v-spacer />
-              <a v-on:click.prevent="forgotPass()">Esqueceu a senha?</a>
-              <v-spacer />
-            </div>
-            <span v-if="firstAccess"><a v-on:click.prevent="firstAccess = false">Já tenho uma conta</a></span>
             <v-btn :disabled="!valid" color="primary">Entrar</v-btn>
             </v-card-actions>
         </v-card>
         </v-col>
+    </v-row>
+    <v-row v-if="!firstAccess" align="center" justify="center" >
+        <v-col cols="6" sm="4" md="2" >
+          <a v-on:click.prevent="firstAccess = true">Primeiro acesso?</a>
+        </v-col>
+        <v-col cols="6" sm="4" md="2" >
+            <a v-on:click.prevent="forgotPass()">Esqueceu a senha?</a>
+        </v-col>
+    </v-row>
+    <v-row v-if="firstAccess" align="center" justify="center" >
+      <v-col cols="12" sm="8" md="4" >
+            <a v-on:click.prevent="firstAccess = false">Já tenho uma conta</a>
+      </v-col>
     </v-row>
     </v-container>
 </template>
