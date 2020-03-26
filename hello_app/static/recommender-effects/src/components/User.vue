@@ -95,8 +95,8 @@ export default {
     close () {
       this.dialog = false;
       setTimeout(() => {
-        this.editedItem = Object.assign({}, this.defaultItem)
-        this.editedIndex = -1
+        this.editedItem = Object.assign({}, this.defaultItem);
+        this.editedIndex = -1;
       }, 300);
     },
 
@@ -110,22 +110,19 @@ export default {
     },    
 
     editItem (item) {
-      this.editedIndex = this.allUsers.indexOf(item)
-      this.editedItem = Object.assign({}, item)
-      this.dialog = true
+      this.editedIndex = this.allUsers.indexOf(item);
+      this.editedItem = Object.assign({}, item);
+      this.dialog = true;
     },
 
     deleteItem (item) {
-      const index = this.allUsers.indexOf(item)
-      confirm('Are you sure you want to delete this User? ALL HER DATA WILL BE LOST') && this.allUsers.splice(index, 1)
+      const index = this.allUsers.indexOf(item);
+      confirm('Are you sure you want to delete this User? ALL HER DATA WILL BE LOST') && this.allUsers.splice(index, 1);
     },
-  },
 
-  created() {
-    axios.defaults.headers.common = {'Authorization': `Bearer ${this.rootloginInfo.root_token}`};
-  },
-
-  mounted() {
+    loadFromServer() {
+    this.usrLoadError = false;
+    this.usrLoading = true;
     axios
       .get('/loadUsers')
       .then( response => {
@@ -138,7 +135,15 @@ export default {
         console.log(error);
       })
       .finally(() => this.usrLoading = false);
+    }
+  },
 
+  created() {
+    axios.defaults.headers.common = {'Authorization': `Bearer ${this.rootloginInfo.root_token}`};
+  },
+
+  mounted() {
+    this.loadFromServer();
   },
 
 }

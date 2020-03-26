@@ -56,9 +56,12 @@
             </v-form>
             </v-card-text>
             <v-card-actions>
-            <span v-if="!firstAccess"><a v-on:click.prevent="firstAccess = true">Primeiro acesso?</a></span>
-            <span v-if="firstAccess"><a v-on:click.prevent="firstAccess = false">Já tenho uma conta</a></span>            
-            <v-spacer />
+            <div v-if="!firstAccess">
+              <a v-on:click.prevent="firstAccess = true">Primeiro acesso?</a>
+              <v-spacer />
+              <a v-on:click.prevent="forgotPass()">Esqueceu a senha?</a>
+            </div>
+            <span v-if="firstAccess"><a v-on:click.prevent="firstAccess = false">Já tenho uma conta</a></span>
             <v-btn :disabled="!valid" color="primary">Entrar</v-btn>
             </v-card-actions>
         </v-card>
@@ -122,12 +125,24 @@ export default {
     submitIfEnter(event) {
       if (event.key == 'Enter' && this.valid) {
         if (this.firstAccess) {
-          //FIXME TODO signup
-          console.log('do signup');
+          axios.post('/signup', {
+            fullname: this.name,
+            emailaddr: this.email,
+            password: this.password
+          })
+          .then((response) => {
+            this.doSignIn();
+          })
+          .catch(function(error) {
+            console.log(error);
+          });
         } else {
           this.doSignIn();
         }
       }
+    },
+    forgotPass() {
+      bus.$emit('turnOnPassRecover');
     }
   },
 

@@ -161,7 +161,7 @@ def spot_callback():
 @app.route("/isemailverified")
 @jwt_required
 def is_email_verified():
-    result = True if db_User_exists(get_jwt_identity()) else False
+    result = True if db_is_User_email_verified(get_jwt_identity()) else False
     return jsonify({"result": result})
 
 @app.route("/spotauthorize")
@@ -408,6 +408,29 @@ def signup():
         msg = "An Error ocurred: " + str(e)
         traceback.print_exc()
         return jsonify({"msg": msg}), 500
+
+@app.route('/resendconfirmationemail', methods=['POST'])
+@jwt_required
+def resend_confirmation_email():
+    gmail_addr = os.environ.get('GMAIL_ADDR', '')
+    if not gmail_addr:
+        return jsonify({"msg": "Misconfiguration error. Missing gmail address?"}), 500
+
+    user_addr = get_jwt_identity()
+    try:
+        with session_scope() as session:
+            user = db_get_User_by_email(user_addr, session)
+            if not user:
+                return jsonify({"msg": "Unknown user"}), 400    
+            user.verify_code = uuid.uuid4().hex
+            return send_confirmation_mail(gmail_addr, user.fullname, user.email, user.verify_code)
+    except Exception as e:
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
+        return jsonify({"msg": msg}), 500
+
+
+
 
 def access_token_for_email(user_addr):
     try:

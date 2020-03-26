@@ -17,12 +17,19 @@
             </p>
           </div>
           <div v-else-if="!isEmailVerified">
-            <p  class="subheading font-weight-regular">
-              Foi-lhe enviada uma mensagem de verificação para seu endereço de e-mail
-               informado. Por favor, clique no link da mensagem para confirmar o seu
-               endereço. Caso não receba a mensagem, clique neste link FIXME para enviarmos
-               novamente.
-            </p>
+            <div v-if="resendEmail">
+              <p  class="subheading font-weight-regular">
+                Foi-lhe enviada uma mensagem de verificação para seu endereço de e-mail
+                informado. Por favor, clique no link da mensagem que recebeu para confirmar o seu
+                endereço. Caso não receba a mensagem, clique <a href="#" @click="sendConfirmation">neste link</a> para enviarmos
+                novamente.
+              </p>
+            </div>
+            <div v-else>
+                Foi-lhe novamente enviada uma mensagem de verificação para seu endereço de e-mail
+                informado. Por favor, clique no link da mensagem que recebeu para confirmar o seu
+                endereço.
+            </div>
           </div>
           <div v-else>
             <!-- here email is verified -->
@@ -89,7 +96,9 @@ export default {
 
     authUrlLoading: true,
     authUrlErrored: false,
-    authUrl: ''
+    authUrl: '',
+
+    resendEmail: true
   }),
 
   methods: {
@@ -154,6 +163,17 @@ export default {
         })
         .finally(() => this.authUrlLoading = false);
       return 'Carregando URL de autenticação...';
+    },
+    sendConfirmation() {
+      axios.post('/resendconfirmationemail', {
+      })
+      .then((response) => {
+        
+      })
+      .catch(function(error) {
+        console.log(error);
+      })
+      .finally (() => this.resendEmail = false);
     }
   },
 
