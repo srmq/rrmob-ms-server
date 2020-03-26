@@ -167,9 +167,6 @@ export default {
     sendConfirmation() {
       axios.post('/resendconfirmationemail', {
       })
-      .then((response) => {
-        
-      })
       .catch(function(error) {
         console.log(error);
       })
