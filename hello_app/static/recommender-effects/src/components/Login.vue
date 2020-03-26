@@ -60,6 +60,7 @@
               <a v-on:click.prevent="firstAccess = true">Primeiro acesso?</a>
               <v-spacer />
               <a v-on:click.prevent="forgotPass()">Esqueceu a senha?</a>
+              <v-spacer />
             </div>
             <span v-if="firstAccess"><a v-on:click.prevent="firstAccess = false">Já tenho uma conta</a></span>
             <v-btn :disabled="!valid" color="primary">Entrar</v-btn>
