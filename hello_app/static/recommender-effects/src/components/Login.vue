@@ -137,7 +137,7 @@ export default {
             emailaddr: this.email,
             password: this.password
           })
-          .then((response) => {
+          .then(() => {
             this.doSignIn();
           })
           .catch(function(error) {
