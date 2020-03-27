@@ -47,32 +47,54 @@ client_id = os.environ.get('SPOTIPY_CLIENT_ID', '')
 client_secret = os.environ.get('SPOTIPY_CLIENT_SECRET', '')
 redirect_uri = os.environ.get('SPOTIPY_REDIRECT_URI', '')
 
+def create_passrecover_confirmation_message(fullname, emailaddr, user_verify_code):
+    plain_message_body = "Olá {fullname}!\n\nRecebemos uma solicitação para definir uma nova senha de acesso para sua conta no RecommenderEffects. Se você fez essa solicitação, visite o link a seguir para realizar a mudança. Se não foi você, simplesmente ignore este e-mail e sua senha permanecerá a mesma de antes. O link a seguir é válido por 24h.\nLink: https://rrmob-ms-server.herokuapp.com/changepass?u={emailaddr}&c={user_verify_code} .\n\nAtenciosamente, \nSergio Queiroz\nEquipe RecommenderEffects".format(fullname=fullname, emailaddr=emailaddr, user_verify_code=user_verify_code)
+    html_message_body = """\
+    <div dir="ltr">Olá {fullname}!<div><br></div><div>Recebemos uma solicitação para definir uma nova senha de acesso para sua conta no RecommenderEffects. Se você fez essa solicitação, visite o link a seguir para realizar a mudança. Se não foi você, simplesmente ignore este e-mail e sua senha permanecerá a mesma de antes. O link a seguir é válido por 24h.
+    <a https://rrmob-ms-server.herokuapp.com/changepass?u={emailaddr}&c={user_verify_code}">
+    https://rrmob-ms-server.herokuapp.com/changepass?u={emailaddr}&c={user_verify_code}</a></div>
+    <div><br></div><div>Atenciosamente,</div>
+    <div><br></div><div>Sergio Queiroz</div><div><br></div><div>Equipe RecommenderEffects</div></div>
+    """.format(fullname=fullname, emailaddr=emailaddr, user_verify_code=user_verify_code)
+
+    plain_message = MIMEText(plain_message_body)
+    html_message = MIMEText(html_message_body, 'html')
+    message = MIMEMultipart('alternative')
+    message['Subject'] = "RecommenderEffects: {0}, sua solicitação de mudança de senha".format(fullname)
+    message['From'] = "srmq@cin.ufpe.br"
+    message['To'] = emailaddr
+    message.attach(plain_message)
+    message.attach(html_message)
+
+    return {'raw': base64.urlsafe_b64encode(message.as_string().encode('utf-8')).decode("utf-8")}
+
+
+def create_email_confirmation_message(fullname, emailaddr, user_verify_code):
+    plain_message_body = "Olá {fullname}!\n\nPara que possamos confirmar seu endereço de email, precisamos que você visite o seguinte link, clicando sobre ele ou então copiando e colando o endereço em seu navegador: https://rrmob-ms-server.herokuapp.com/confirmemail?u={emailaddr}&c={user_verify_code} .\n\nAgradecemos sua colaboração!\n\nSergio Queiroz\nEquipe RecommenderEffects".format(fullname=fullname, emailaddr=emailaddr, user_verify_code=user_verify_code)
+    html_message_body = """\
+    <div dir="ltr">Olá {fullname}!<div><br></div><div>Para que 
+    possamos confirmar seu endereço de email, precisamos que 
+    você visite o seguinte link, clicando sobre ele ou então
+    copiando e colando o endereço em seu navegador:
+    <a href="https://rrmob-ms-server.herokuapp.com/confirmemail?u={emailaddr}&c={user_verify_code}">
+    https://rrmob-ms-server.herokuapp.com/confirmemail?u={emailaddr}&c={user_verify_code}</a></div>
+    <div><br></div><div>Agradecemos sua colaboração!</div>
+    <div><br></div><div>Sergio Queiroz</div><div><br></div><div>Equipe RecommenderEffects</div></div>
+    """.format(fullname=fullname, emailaddr=emailaddr, user_verify_code=user_verify_code)
+
+    plain_message = MIMEText(plain_message_body)
+    html_message = MIMEText(html_message_body, 'html')
+    message = MIMEMultipart('alternative')
+    message['Subject'] = "RecommenderEffects: {0}, por favor, confirme o seu e-mail".format(fullname)
+    message['From'] = "srmq@cin.ufpe.br"
+    message['To'] = emailaddr
+    message.attach(plain_message)
+    message.attach(html_message)
+
+    return {'raw': base64.urlsafe_b64encode(message.as_string().encode('utf-8')).decode("utf-8")}
+
  
-def send_confirmation_mail(send_addr, fullname, emailaddr, user_verify_code):
-    def create_confirmation_message(to_name, to_address, verification_code):
-        plain_message_body = "Olá {fullname}!\n\nPara que possamos confirmar seu endereço de email, precisamos que você visite o seguinte link, clicando sobre ele ou então copiando e colando o endereço em seu navegador: https://rrmob-ms-server.herokuapp.com/confirmemail?u={emailaddr}&c={user_verify_code} .\n\nAgradecemos sua colaboração!\n\nSergio Queiroz\nEquipe RecommenderEffects".format(fullname=fullname, emailaddr=emailaddr, user_verify_code=user_verify_code)
-        html_message_body = """\
-        <div dir="ltr">Olá {fullname}!<div><br></div><div>Para que 
-        possamos confirmar seu endereço de email, precisamos que 
-        você visite o seguinte link, clicando sobre ele ou então
-        copiando e colando o endereço em seu navegador:
-        <a href="https://rrmob-ms-server.herokuapp.com/confirmemail?u={emailaddr}&c={user_verify_code}">
-        https://rrmob-ms-server.herokuapp.com/confirmemail?u={emailaddr}&c={user_verify_code}</a></div>
-        <div><br></div><div>Agradecemos sua colaboração!</div>
-        <div><br></div><div>Sergio Queiroz</div><div><br></div><div>Equipe RecommenderEffects</div></div>
-        """.format(fullname=fullname, emailaddr=emailaddr, user_verify_code=user_verify_code)
-
-        plain_message = MIMEText(plain_message_body)
-        html_message = MIMEText(html_message_body, 'html')
-        message = MIMEMultipart('alternative')
-        message['Subject'] = "RecommenderEffects: {0}, por favor, confirme o seu e-mail".format(fullname)
-        message['From'] = "srmq@cin.ufpe.br"
-        message['To'] = emailaddr
-        message.attach(plain_message)
-        message.attach(html_message)
-
-        return {'raw': base64.urlsafe_b64encode(message.as_string().encode('utf-8')).decode("utf-8")}
-
+def send_confirmation_mail(create_message_func, send_addr, fullname, emailaddr, user_verify_code):
     try:
         with session_scope() as session:
             gmailAuth = db_get_GMailAuth(send_addr, session)
@@ -87,7 +109,7 @@ def send_confirmation_mail(send_addr, fullname, emailaddr, user_verify_code):
                 gmailAuth.credentials = json.loads(creds.to_json())
 
         gmail_service = build('gmail', 'v1', credentials=creds)
-        message = create_confirmation_message(fullname, emailaddr, user_verify_code)
+        message = create_message_func(fullname, emailaddr, user_verify_code)
         sent_message = (gmail_service.users().messages().send(userId="me", body=message).execute())
         print ("Message Id: " + sent_message['id']) 
     except Exception as e:
@@ -403,7 +425,7 @@ def signup():
         new_user = User(fullname = fullname, email = emailaddr, verify_code = user_verify_code, invitee_id = inviteeId, pass_hash = user_pass_hash, pass_salt = user_salt)
 
         db_User_add(new_user)
-        return send_confirmation_mail(gmail_addr, fullname, emailaddr, user_verify_code)
+        return send_confirmation_mail(create_email_confirmation_message, gmail_addr, fullname, emailaddr, user_verify_code)
     except Exception as e:
         msg = "An Error ocurred: " + str(e)
         traceback.print_exc()
@@ -423,7 +445,7 @@ def resend_confirmation_email():
             if not user:
                 return jsonify({"msg": "Unknown user"}), 400    
             user.verify_code = uuid.uuid4().hex
-            return send_confirmation_mail(gmail_addr, user.fullname, user.email, user.verify_code)
+            return send_confirmation_mail(create_email_confirmation_message, gmail_addr, user.fullname, user.email, user.verify_code)
     except Exception as e:
         msg = "An Error ocurred: " + str(e)
         traceback.print_exc()
@@ -681,6 +703,33 @@ def put_gmail_send_auth():
     else:
         return jsonify({"msg": "Success"}), 200
 
+@app.route('/passrecover', methods=['POST'])
+def pass_recover():
+    gmail_addr = os.environ.get('GMAIL_ADDR', '')
+    if not gmail_addr:
+        return jsonify({"msg": "Misconfiguration error. Missing gmail address?"}), 500
+
+    if not request.is_json:
+        return jsonify({"msg": "Malformed request, expecting JSON"}), 400
+    emailaddr = request.json.get('email', None)
+    if not emailaddr:
+        return jsonify({"msg": "Missing email parameter"}), 400
+    try:        
+        with session_scope() as session:                
+            user = db_get_User_by_email(emailaddr, session)
+            if user:
+                my_state = uuid.uuid4().hex
+                user.auth_info = {"state" : my_state, "state_issued_at" : datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                fullname = '' + user.fullname
+
+        if my_state:
+            return send_confirmation_mail(create_passrecover_confirmation_message, gmail_addr, fullname, emailaddr, my_state)
+        else:
+            return jsonify({"msg": "Success"}), 200
+    except Exception as e:
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
+        return jsonify({"msg": msg}), 500
 
 @app.route('/addinvitee', methods=['POST'])
 def add_invitee():
