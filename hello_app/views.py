@@ -10,7 +10,8 @@ from .dbfuncs import (
     db_Invitee_idFor, db_Invitee_add, db_put_gmail_send_auth,
     session_scope, db_get_GMailAuth, db_get_GMailAuth_by_state,
     db_get_User_by_email, db_get_SpotifyAuth_by_state,
-    db_is_User_email_verified, db_get_AllInvitees
+    db_is_User_email_verified, db_get_AllInvitees,
+    db_get_Invitee_by_Id
 )
 from .dbclasses import User, Invitee, GMailAuthSchema, SpotifyAuth
 from spotipy.oauth2 import SpotifyOAuth
@@ -297,6 +298,56 @@ def confirm_email():
         return jsonify({"msg": msg}), 500
     else:
         return jsonify({"msg": "Success"}), 200
+
+@app.route('/updateUser', methods=['POST'])
+@jwt_required
+def update_user():
+    if get_jwt_identity() != "root":
+        return jsonify({"msg": "Unauthorized user"}), 401
+
+    if not request.is_json:
+        return jsonify({"msg": "Malformed request, expecting JSON"}), 400
+
+    id = request.json.get('id', None)
+    if not id:
+        return jsonify({"msg": "Missing id"}), 400
+    
+    try:
+        with session_scope() as session:
+            invitee = db_get_Invitee_by_Id(id, session)
+            if not invitee:
+                return jsonify({"msg": "Invitee not found"}), 400
+            invited_email = request.json.get('invited_email')
+            if invited_email:
+                if not '@' in parseaddr(invited_email)[1]:
+                    if invited_email != invitee.email:
+                        invitee.email = invited_email
+                else:
+                    return jsonify({"msg": "Invalid invitee email address"}), 400
+            if invitee.registered_usr:
+                fullname = request.json.get('fullname')
+                if fullname: 
+                    if len(fullname) >= 2:
+                        if fullname != invitee.registered_usr.fullname:
+                            invitee.registered_usr.fullname = fullname
+                    else:
+                        return jsonify({"msg": "Invalid full name"}), 400
+                
+                reg_email = request.json.get('reg_email')
+                if reg_email:
+                    if not '@' in parseaddr(reg_email)[1]:
+                        return jsonify({"msg": "Invalid registered email address"}), 400
+                    else:
+                        if reg_email != invitee.registered_usr.email:
+                            invitee.registered_usr.email = reg_email
+                            invitee.registered_usr.email_verified = False
+    except Exception as e:
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
+        return jsonify({"msg": msg}), 500
+    else:
+        return jsonify({"msg": "Success"}), 200
+    
 
 @app.route('/loadUsers', methods=['GET'])
 @jwt_required
@@ -820,7 +871,7 @@ def pass_recover():
         traceback.print_exc()
         return jsonify({"msg": msg}), 500
 
-@app.route('/addinvitee', methods=['POST'])
+@app.route('/addinvitee', methods=['PUT'])
 @jwt_required
 def add_invitee():
     if get_jwt_identity() != "root":
@@ -836,13 +887,13 @@ def add_invitee():
 
     try:
         invitee = Invitee(email = emailaddr)
-        db_Invitee_add(invitee)
+        newId = db_Invitee_add(invitee)
     except Exception as e:
         msg = "An Error ocurred: " + str(e)
         traceback.print_exc()
         return jsonify({"msg": msg}), 500
     else:
-        return jsonify({"msg": "Success"}), 200
+        return jsonify({"msg": "Success", "id": newId}), 200
 
 @app.route('/', defaults={'u_path': ''})
 @app.route('/<path:u_path>')

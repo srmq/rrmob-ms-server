@@ -18,12 +18,23 @@
           </template>
           <v-card>
             <v-card-title>
-              <span class="headline">Add Invitee</span>
+              <span class="headline">Invitee</span>
             </v-card-title>            
 
             <v-card-text>
               <v-container>
-                <v-row>
+                <v-row v-if="editedItem.fullname.length >= 2 && editedItem.reg_email.indexOf('@') != -1">
+                  <v-col cols="12" sm="6" md="4">
+                    <v-text-field v-model="editedItem.invited_email" label="Invitee e-mail"></v-text-field>
+                  </v-col>
+                  <v-col cols="12" sm="6" md="4">
+                    <v-text-field v-model="editedItem.fullname" label="Full name"></v-text-field>
+                  </v-col>
+                  <v-col cols="12" sm="6" md="4">
+                    <v-text-field v-model="editedItem.reg_email" label="Registered e-mail"></v-text-field>
+                  </v-col>
+                </v-row>
+                <v-row v-else>
                   <v-col cols="12" sm="12" md="8">
                     <v-text-field v-model="editedItem.invited_email" label="Invitee e-mail"></v-text-field>
                   </v-col>
@@ -33,20 +44,18 @@
 
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="blue darken-1" text @click="close">Cancel</v-btn>
-              <v-btn color="blue darken-1" text @click="save">Save</v-btn>
+              <v-btn color="blue darken-1" :disabled="isUpdating" text @click="close">Cancel</v-btn>
+              <v-btn color="blue darken-1" :disabled="isUpdating" text @click="save">Save</v-btn>
             </v-card-actions>
           </v-card>
           <div>
               <v-alert
-                v-model="alert"
+                v-model="addInviteeAlert"
                 type="error"
                 close-text="Close"
                 dismissible
               >
-                Aenean imperdiet. Quisque id odio. Cras dapibus. Pellentesque ut neque. Cras dapibus.
-
-                Vivamus consectetuer hendrerit lacus. Sed mollis, eros et ultrices tempus, mauris ipsum aliquam libero, non adipiscing dolor urna a orci. Sed mollis, eros et ultrices tempus, mauris ipsum aliquam libero, non adipiscing dolor urna a orci. Curabitur blandit mollis lacus. Curabitur ligula sapien, tincidunt non, euismod vitae, posuere imperdiet, leo.
+                {{ addInviteeAlertMsg }}
               </v-alert>
           </div>          
         </v-dialog>
@@ -101,7 +110,10 @@ export default {
     usrLoadError: false,
 
     dialog: false,
-    alert: true
+    addInviteeAlert: false,
+    addInviteeAlertMsg: '',
+
+    isUpdating: false
   }),
 
   methods: {
@@ -113,13 +125,55 @@ export default {
       }, 300);
     },
 
+    //will use a write-through strategy, change in array only after it is changed
+    //successfully in bd
     save () {
       if (this.editedIndex > -1) {
-        Object.assign(this.allUsers[this.editedIndex], this.editedItem);
+        //editing an existing user
+        this.isUpdating = true;
+        axios.post('/updateUser', this.editedItem)
+        .then(() => {
+          Object.assign(this.allUsers[this.editedIndex], this.editedItem);
+          this.close();
+        })
+        .catch(function(error) {
+          console.log(error);
+          this.addInviteeAlertMsg = "An unexpected error has ocurred";
+          if (error.response) {
+            if (error.response.data) {
+              if (error.response.data.msg) {
+                this.addInviteeAlertMsg = error.response.data.msg;
+              }
+            }
+          }          
+          this.addInviteeAlert = true;
+        })
+        .finally(() => this.isUpdating = false);
       } else {
-        this.allUsers.push(this.editedItem);
+        //is a new invitee
+        this.isUpdating = true;
+        axios.put('/addinvitee', {
+          email: this.editedItem.invited_email
+        })
+        .then((response) => {
+          this.editedItem.id = response.data.id;
+          this.allUsers.push(this.editedItem);
+          this.close();
+        })
+        .catch(function(error) {
+          console.log(error);
+          this.addInviteeAlertMsg = "An unexpected error has ocurred";
+          if (error.response) {
+            if (error.response.data) {
+              if (error.response.data.msg) {
+                this.addInviteeAlertMsg = error.response.data.msg;
+              }
+            }
+          }          
+          this.addInviteeAlert = true;
+        })
+        .finally(() => this.isUpdating = false);
       }
-      this.close();
     },    
 
     editItem (item) {
@@ -134,20 +188,20 @@ export default {
     },
 
     loadFromServer() {
-    this.usrLoadError = false;
-    this.usrLoading = true;
-    axios
-      .get('/loadUsers')
-      .then( response => {
-        this.allUsers = response.data;
-        
-        console.log(response);
-      })
-      .catch(error => {
-        this.usrLoadError = true;
-        console.log(error);
-      })
-      .finally(() => this.usrLoading = false);
+      this.usrLoadError = false;
+      this.usrLoading = true;
+      axios
+        .get('/loadUsers')
+        .then( response => {
+          this.allUsers = response.data;
+          
+          console.log(response);
+        })
+        .catch(error => {
+          this.usrLoadError = true;
+          console.log(error);
+        })
+        .finally(() => this.usrLoading = false);
     }
   },
 

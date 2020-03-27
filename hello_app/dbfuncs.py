@@ -61,6 +61,10 @@ def db_User_add(user):
 def db_Invitee_add(invitee):
     with session_scope() as session:
         session.add(invitee)
+        session.flush()
+        if not invitee.id:
+            raise Exception("Could not get new invitee id")
+        return invitee.id
 
 def db_put_gmail_send_auth(jsonData):
     with session_scope() as session:
@@ -79,6 +83,9 @@ def db_put_gmail_send_auth(jsonData):
 
 def db_get_AllInvitees(session):
     return session.query(Invitee).all()
+
+def db_get_Invitee_by_Id(id, session):
+    return session.query(Invitee).filter(Invitee.id == id).first()
 
 def db_get_GMailAuth(email, session):
     return session.query(GMailAuth).filter(GMailAuth.email == email).first()
