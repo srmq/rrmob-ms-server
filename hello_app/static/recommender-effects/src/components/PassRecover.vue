@@ -41,6 +41,7 @@
 </template>
 <script>
 import { bus } from '../main'
+import axios from 'axios';
 
 export default {
   name: 'PassRecover',
@@ -72,14 +73,14 @@ export default {
           axios.post('/passrecover', {
             email: this.email,
           })
-          .then((response) => {
+          .then(() => {
             this.emailSent = true;
           })
           .catch(function(error) {
             this.emailSentError = true;
             console.log(error);
           })
-          .finally(() => this.emailSending = false);;
+          .finally(() => this.emailSending = false);
         }
       }
     }      
