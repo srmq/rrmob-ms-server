@@ -255,6 +255,19 @@ def drop_ddl_db():
     else:
         return jsonify({"msg": "Success"}), 200
 
+@app.route('/changepass', methods=['GET'])
+def change_pass():
+    emailaddr = request.args.get('u', None)
+    # XXX should redirect to rendered page with error
+    if not emailaddr:
+        return jsonify({"msg": "Missing email address parameter"}), 400    
+    
+    code = request.args.get('c', None)
+    if not code:
+        return jsonify({"msg": "Missing confirmation code parameter"}), 400
+
+    return redirect(url_for('catch_all', email = emailaddr, passchangecode = code))
+
 @app.route('/confirmemail', methods=['GET'])
 def confirm_email():
     emailaddr = request.args.get('u', None)
@@ -376,7 +389,86 @@ def signin():
         msg = "An Error ocurred: " + str(e)
         traceback.print_exc()
         return jsonify({"msg": msg}), 500
+
+def is_password_valid(password):
+    if not password:
+        return False,"Password is missing"
+    elif len(password) < 6:
+        return False,"Password parameter should have at least 6 characters"
+    elif re.search(r"\d", password) is None:
+        return False,"Password parameter should have at least one digit"
+    elif re.search(r"[A-Z]", password) is None and re.search(r"[a-z]", password) is None:
+        return False,"Password parameter should have at least one letter"
+    else:
+        return True,"Success"
+
+def new_passHash_salt(password):
+    user_salt = uuid.uuid4().hex
+    pass_Hash = hashlib.sha512(base64.b64encode((password + ":" + user_salt).encode())).hexdigest()
+    return pass_Hash, user_salt
+
+@app.route('/newpass', methods=['POST'])
+def new_pass():
+    if not request.is_json:
+        return jsonify({"msg": "Malformed request, expecting JSON"}), 400
+    
+    email = request.json.get('email', None)
+    if not email:
+        return jsonify({"msg": "Missing email address parameter"}), 400
+    elif not '@' in parseaddr(email)[1]:
+        return jsonify({"msg": "Malformed email address"}), 400
+
+    passchangecode = request.json.get('passchangecode', None)
+    if not passchangecode:
+        return jsonify({"msg": "Missing password change code"}), 400
+
+    newpass = request.json.get('newpass', None)
+    if not newpass:
+        return jsonify({"msg": "Missing new password parameter"}), 400
+    
+    isValid, msg = is_password_valid(newpass)
+    if not isValid:
+        return jsonify({"msg": msg}), 400
+    
+    try:
+        with session_scope() as session:
+            user = db_get_User_by_email(email, session)
+            if not user:
+                return jsonify({"msg": "Invalid email"}), 401
             
+            if not user.auth_info:
+                return jsonify({"msg": "Unauthorized"}), 400
+            
+            if not user.auth_info.get('state', None):
+                return jsonify({"msg": "Unauthorized"}), 400
+
+            if not passchangecode == user.auth_info.get('state', None):
+                return jsonify({"msg": "Unauthorized"}), 400
+
+            strStateIssuedAt =  user.auth_info.get('state_issued_at', None)
+            if not strStateIssuedAt:
+                return jsonify({"msg": "Unauthorized"}), 400
+
+            stateIssuedAt = datetime.strptime(strStateIssuedAt, '%Y-%m-%d %H:%M:%S')
+            if not stateIssuedAt:
+                return jsonify({"msg": "Unauthorized"}), 400
+
+            if (datetime.now() - stateIssuedAt).total_seconds() > (3600*24):
+                return jsonify({"msg": "Code expired"}), 401
+            
+            newHash, newSalt = new_passHash_salt(newpass)
+            user.pass_hash = newHash
+            user.pass_salt = newSalt
+    except Exception as e:
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
+        return jsonify({"msg": msg}), 500
+    else:
+        return jsonify({"msg": "Success"}), 200
+
+
+
+
 
 
 @app.route('/signup', methods=['POST'])
@@ -399,12 +491,10 @@ def signup():
     password = request.json.get('password', None)
     if not password:
         return jsonify({"msg": "Missing password parameter"}), 400
-    elif len(password) < 6:
-        return jsonify({"msg": "Password parameter should have at least 6 characters"}), 400
-    elif re.search(r"\d", password) is None:
-        return jsonify({"msg": "Password parameter should have at least one digit"}), 400
-    elif re.search(r"[A-Z]", password) is None and re.search(r"[a-z]", password) is None:
-        return jsonify({"msg": "Password parameter should have at least one letter"}), 400
+    
+    isValid, msg = is_password_valid(password)
+    if not isValid:
+        return jsonify({"msg": msg}), 400
 
     gmail_addr = os.environ.get('GMAIL_ADDR', '')
     if not gmail_addr:
@@ -418,10 +508,9 @@ def signup():
         if inviteeId is None:
             return jsonify({"msg": "Given email is not on invitee list"}), 400
             
-        user_salt = uuid.uuid4().hex
         user_verify_code = uuid.uuid4().hex
-        
-        user_pass_hash = hashlib.sha512(base64.b64encode((password + ":" + user_salt).encode())).hexdigest()
+
+        user_pass_hash, user_salt = new_passHash_salt(password)
         new_user = User(fullname = fullname, email = emailaddr, verify_code = user_verify_code, invitee_id = inviteeId, pass_hash = user_pass_hash, pass_salt = user_salt)
 
         db_User_add(new_user)
