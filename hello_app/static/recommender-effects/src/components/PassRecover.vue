@@ -29,7 +29,7 @@
                 />
             </v-form>
             </v-card-text>
-            <v-card-actions>
+            <v-card-actions v-if="!emailSending">
             <v-spacer />
             <v-btn color="primary" @click="close"><span v-if="!emailSent">Cancelar</span><span v-else>Voltar</span></v-btn>
             <v-btn v-if="!emailSent" @click="sendEmail" :disabled="!valid" color="primary">Enviar</v-btn>
