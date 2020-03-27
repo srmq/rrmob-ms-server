@@ -24,7 +24,7 @@
             <v-card-text>
               <v-container>
                 <v-row>
-                  <v-col cols="12" sm="6" md="4">
+                  <v-col cols="12" sm="12" md="8">
                     <v-text-field v-model="editedItem.invited_email" label="Invitee e-mail"></v-text-field>
                   </v-col>
                 </v-row>
@@ -37,6 +37,18 @@
               <v-btn color="blue darken-1" text @click="save">Save</v-btn>
             </v-card-actions>
           </v-card>
+          <div>
+              <v-alert
+                v-model="alert"
+                type="error"
+                close-text="Close"
+                dismissible
+              >
+                Aenean imperdiet. Quisque id odio. Cras dapibus. Pellentesque ut neque. Cras dapibus.
+
+                Vivamus consectetuer hendrerit lacus. Sed mollis, eros et ultrices tempus, mauris ipsum aliquam libero, non adipiscing dolor urna a orci. Sed mollis, eros et ultrices tempus, mauris ipsum aliquam libero, non adipiscing dolor urna a orci. Curabitur blandit mollis lacus. Curabitur ligula sapien, tincidunt non, euismod vitae, posuere imperdiet, leo.
+              </v-alert>
+          </div>          
         </v-dialog>
     </v-card-title>      
       <v-data-table :item-key="id" class="elevation-1" 
@@ -88,7 +100,8 @@ export default {
     usrLoading : true,
     usrLoadError: false,
 
-    dialog: false
+    dialog: false,
+    alert: true
   }),
 
   methods: {
