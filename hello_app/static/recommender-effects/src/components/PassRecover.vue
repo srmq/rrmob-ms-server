@@ -32,7 +32,7 @@
             <v-card-actions>
             <v-spacer />
             <v-btn color="primary" @click="close"><span v-if="!emailSent">Cancelar</span><span v-else>Voltar</span></v-btn>
-            <v-btn :disabled="!valid" color="primary">Enviar</v-btn>
+            <v-btn v-if="!emailSent" @click="sendEmail" :disabled="!valid" color="primary">Enviar</v-btn>
             </v-card-actions>
         </v-card>
         </v-col>
@@ -65,8 +65,7 @@ export default {
     close() {
         bus.$emit('turnOffPassRecover');
     },
-    submitIfEnter(event) {
-      if (event.key == 'Enter' && this.valid) {
+    sendEmail() {
         if (this.email.indexOf('@') !== -1) {
           this.emailSending = true;
           this.emailSentError = false;
@@ -82,6 +81,10 @@ export default {
           })
           .finally(() => this.emailSending = false);
         }
+    },
+    submitIfEnter(event) {
+      if (event.key == 'Enter' && this.valid) {
+        this.sendEmail();
       }
     }      
   }
