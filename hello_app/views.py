@@ -51,7 +51,7 @@ def create_passrecover_confirmation_message(fullname, emailaddr, user_verify_cod
     plain_message_body = "Olá {fullname}!\n\nRecebemos uma solicitação para definir uma nova senha de acesso para sua conta no RecommenderEffects. Se você fez essa solicitação, visite o link a seguir para realizar a mudança. Se não foi você, simplesmente ignore este e-mail e sua senha permanecerá a mesma de antes. O link a seguir é válido por 24h.\nLink: https://rrmob-ms-server.herokuapp.com/changepass?u={emailaddr}&c={user_verify_code} .\n\nAtenciosamente, \nSergio Queiroz\nEquipe RecommenderEffects".format(fullname=fullname, emailaddr=emailaddr, user_verify_code=user_verify_code)
     html_message_body = """\
     <div dir="ltr">Olá {fullname}!<div><br></div><div>Recebemos uma solicitação para definir uma nova senha de acesso para sua conta no RecommenderEffects. Se você fez essa solicitação, visite o link a seguir para realizar a mudança. Se não foi você, simplesmente ignore este e-mail e sua senha permanecerá a mesma de antes. O link a seguir é válido por 24h.
-    <a https://rrmob-ms-server.herokuapp.com/changepass?u={emailaddr}&c={user_verify_code}">
+    <a href="https://rrmob-ms-server.herokuapp.com/changepass?u={emailaddr}&c={user_verify_code}">
     https://rrmob-ms-server.herokuapp.com/changepass?u={emailaddr}&c={user_verify_code}</a></div>
     <div><br></div><div>Atenciosamente,</div>
     <div><br></div><div>Sergio Queiroz</div><div><br></div><div>Equipe RecommenderEffects</div></div>
