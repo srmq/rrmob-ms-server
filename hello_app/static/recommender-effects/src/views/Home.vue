@@ -26,7 +26,7 @@ import { bus } from '../main'
 export default {
   name: 'Home',
   components: {
-    Login, Top, PassRecover
+    Login, Top, PassRecover, ChangePass 
   },
   data: () => ({
     loggedIn: false,
