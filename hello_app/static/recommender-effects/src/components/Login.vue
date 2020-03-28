@@ -103,7 +103,7 @@ export default {
       v => !!v || 'Senha obrigatória',
       v => v.length >= 6 || 'A senha deve ter 6 ou mais caracteres',
       v => /\d/.test(v) || 'A senha deve ter pelo menos 1 dígito',
-      v => v.match('[a-zA-Z]+') || 'A senha deve ter pelo menos 1 letra'
+      v => v.match('[a-zA-Z]+') != null || 'A senha deve ter pelo menos 1 letra'
     ],
     passwordCheck : '',
     firstAccess: false,
