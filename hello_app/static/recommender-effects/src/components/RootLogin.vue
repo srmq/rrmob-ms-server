@@ -22,7 +22,7 @@
             </v-card-text>
             <v-card-actions>
             <v-spacer />
-            <v-btn :disabled="!valid" @click="doRootSignIn" color="primary">Entrar</v-btn>
+            <v-btn :disabled="!valid" @click.native="doRootSignIn" color="primary">Entrar</v-btn>
             </v-card-actions>
         </v-card>
         </v-col>
