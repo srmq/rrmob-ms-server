@@ -23,7 +23,7 @@
 
             <v-card-text>
               <v-container>
-                <v-row v-if="editedItem.fullname.length >= 2 && editedItem.reg_email.indexOf('@') != -1">
+                <v-row v-if="editedItem.fullname && editedItem.fullname.length >= 2 && editedItem.reg_email && editedItem.reg_email.indexOf('@') != -1">
                   <v-col cols="12" sm="6" md="4">
                     <v-text-field v-model="editedItem.invited_email" label="Invitee e-mail"></v-text-field>
                   </v-col>
