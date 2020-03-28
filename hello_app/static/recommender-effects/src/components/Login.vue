@@ -56,7 +56,7 @@
             </v-form>
             </v-card-text>
             <v-card-actions>
-            <v-btn :disabled="!valid" color="primary" @click="doEnter">Entrar</v-btn>
+            <v-btn :disabled="!valid" @click="doEnter" color="primary">Entrar</v-btn>
             </v-card-actions>
         </v-card>
         </v-col>
