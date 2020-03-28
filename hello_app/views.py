@@ -331,7 +331,7 @@ def update_user():
                 return jsonify({"msg": msg}), 400
             invited_email = request.json.get('invited_email')
             if invited_email:
-                if not '@' in parseaddr(invited_email)[1]:
+                if '@' in parseaddr(invited_email)[1]:
                     if invited_email != invitee.email:
                         invitee.email = invited_email
                 else:
