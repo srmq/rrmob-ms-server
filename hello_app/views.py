@@ -303,27 +303,42 @@ def confirm_email():
 @jwt_required
 def update_user():
     if get_jwt_identity() != "root":
-        return jsonify({"msg": "Unauthorized user"}), 401
+        msg = "Unauthorized user"
+        log = logging.getLogger()
+        log.debug(msg)
+        return jsonify({"msg": msg}), 401
 
     if not request.is_json:
-        return jsonify({"msg": "Malformed request, expecting JSON"}), 400
+        msg = "Malformed request, expecting JSON"
+        log = logging.getLogger()
+        log.debug(msg)
+        return jsonify({"msg": msg}), 400
 
     id = request.json.get('id', None)
     if not id:
-        return jsonify({"msg": "Missing id"}), 400
+        msg = "Missing id"
+        log = logging.getLogger()
+        log.debug(msg)
+        return jsonify({"msg": msg}), 400
     
     try:
         with session_scope() as session:
             invitee = db_get_Invitee_by_Id(id, session)
             if not invitee:
-                return jsonify({"msg": "Invitee not found"}), 400
+                msg = "Invitee not found"
+                log = logging.getLogger()
+                log.debug(msg)
+                return jsonify({"msg": msg}), 400
             invited_email = request.json.get('invited_email')
             if invited_email:
                 if not '@' in parseaddr(invited_email)[1]:
                     if invited_email != invitee.email:
                         invitee.email = invited_email
                 else:
-                    return jsonify({"msg": "Invalid invitee email address"}), 400
+                    msg = "Invalid invitee email address"
+                    log = logging.getLogger()
+                    log.debug(msg)
+                    return jsonify({"msg": msg}), 400
             if invitee.registered_usr:
                 fullname = request.json.get('fullname')
                 if fullname: 
@@ -331,12 +346,18 @@ def update_user():
                         if fullname != invitee.registered_usr.fullname:
                             invitee.registered_usr.fullname = fullname
                     else:
-                        return jsonify({"msg": "Invalid full name"}), 400
+                        msg = "Invalid full name"
+                        log = logging.getLogger()
+                        log.debug(msg)
+                        return jsonify({"msg": msg}), 400
                 
                 reg_email = request.json.get('reg_email')
                 if reg_email:
                     if not '@' in parseaddr(reg_email)[1]:
-                        return jsonify({"msg": "Invalid registered email address"}), 400
+                        msg = "Invalid registered email address"
+                        log = logging.getLogger()
+                        log.debug(msg)
+                        return jsonify({"msg": msg}), 400
                     else:
                         if reg_email != invitee.registered_usr.email:
                             invitee.registered_usr.email = reg_email
