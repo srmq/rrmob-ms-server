@@ -75,7 +75,7 @@ export default {
           .then(() => {
             this.emailSent = true;
           })
-          .catch(function(error) {
+          .catch((error) => {
             this.emailSentError = true;
             console.log(error);
           })

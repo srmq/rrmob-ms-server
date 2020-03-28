@@ -56,7 +56,7 @@
             </v-form>
             </v-card-text>
             <v-card-actions>
-            <v-btn :disabled="!valid" color="primary">Entrar</v-btn>
+            <v-btn :disabled="!valid" color="primary" @click="doEnter">Entrar</v-btn>
             </v-card-actions>
         </v-card>
         </v-col>
@@ -128,27 +128,30 @@ export default {
       .then((response) => {
         bus.$emit('loggedIn', {email: this.email, access_token: response.data.access_token});
       })
-      .catch(function(error) {
+      .catch((error) => {
         console.log(error);
       });
     },
+    doEnter() {
+      if (this.firstAccess) {
+        axios.post('/signup', {
+          fullname: this.name,
+          emailaddr: this.email,
+          password: this.password
+        })
+        .then(() => {
+          this.doSignIn();
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+      } else {
+        this.doSignIn();
+      }
+    },
     submitIfEnter(event) {
       if (event.key == 'Enter' && this.valid) {
-        if (this.firstAccess) {
-          axios.post('/signup', {
-            fullname: this.name,
-            emailaddr: this.email,
-            password: this.password
-          })
-          .then(() => {
-            this.doSignIn();
-          })
-          .catch(function(error) {
-            console.log(error);
-          });
-        } else {
-          this.doSignIn();
-        }
+        this.doEnter();
       }
     },
     forgotPass() {
@@ -168,7 +171,7 @@ export default {
         bus.$emit('loggedIn', {email: response.data.email, 
                                access_token: response.data.access_token});
       })
-      .catch(function(error) {
+      .catch((error) => {
         this.stateCheckError = true;
         console.log(error);
       })

@@ -167,7 +167,7 @@ export default {
     sendConfirmation() {
       axios.post('/resendconfirmationemail', {
       })
-      .catch(function(error) {
+      .catch((error) => {
         console.log(error);
       })
       .finally (() => this.resendEmail = false);

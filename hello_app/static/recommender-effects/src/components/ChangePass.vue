@@ -97,7 +97,7 @@ export default {
                 .then(() => {
                     this.changeSentOk = true;
                 })
-                .catch(function(error) {
+                .catch((error) => {
                     this.changeSendError = true;
                     console.log(error);
                 })

@@ -22,7 +22,7 @@
             </v-card-text>
             <v-card-actions>
             <v-spacer />
-            <v-btn :disabled="!valid" color="primary">Entrar</v-btn>
+            <v-btn :disabled="!valid" color="primary" @click="doRootSignIn">Entrar</v-btn>
             </v-card-actions>
         </v-card>
         </v-col>
@@ -49,15 +49,17 @@ export default {
   }),
   methods: {
     doRootSignIn() {
-      axios.post('/rootsignin', {
-        rootpass: this.password
-      })
-      .then((response) => {
-        bus.$emit('rootLoggedIn', {root_token: response.data.root_token});
-      })
-      .catch(function(error) {
-        console.log(error);
-      });
+      if (this.password.length > 0) {
+        axios.post('/rootsignin', {
+          rootpass: this.password
+        })
+        .then((response) => {
+          bus.$emit('rootLoggedIn', {root_token: response.data.root_token});
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+      }
     },
     submitIfEnter(event) {
       if (event.key == 'Enter' && this.valid) {

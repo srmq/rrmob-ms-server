@@ -136,7 +136,7 @@ export default {
           Object.assign(this.allUsers[this.editedIndex], this.editedItem);
           this.close();
         })
-        .catch(function(error) {
+        .catch((error) => {
           console.log(error);
           this.addInviteeAlertMsg = "An unexpected error has ocurred";
           if (error.response) {
@@ -160,7 +160,7 @@ export default {
           this.allUsers.push(this.editedItem);
           this.close();
         })
-        .catch(function(error) {
+        .catch((error) => {
           console.log(error);
           this.addInviteeAlertMsg = "An unexpected error has ocurred";
           if (error.response) {
