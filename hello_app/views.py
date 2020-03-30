@@ -291,7 +291,7 @@ def confirm_email():
             if not user.verify_code == code:
                 return jsonify({"msg": "Invalid verification code"}), 400
             user.email_verified = True
-            return redirect(url_for('catch_all', confirm_email = emailaddr)), 200            
+            return redirect(url_for('catch_all'))       
     except Exception as e:
         msg = "An Error ocurred: " + str(e)
         traceback.print_exc()
