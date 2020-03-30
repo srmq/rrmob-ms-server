@@ -186,7 +186,7 @@ export default {
       if (confirm('Are you sure you want to delete this User? ALL HER DATA WILL BE LOST')) {
         this.usrLoading = true;
 
-        axios.post('/deleteUser', {id: this.editedItem.id})
+        axios.post('/deleteUser', {id: item.id})
         .then(() => {
           const index = this.allUsers.indexOf(item);
           this.allUsers.splice(index, 1);
