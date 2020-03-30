@@ -283,21 +283,20 @@ def confirm_email():
         with session_scope() as session:
             user = db_get_User_by_email(emailaddr, session)
             if not user:
-                return jsonify({"msg": "Missing confirmation code parameter"}), 400
+                return jsonify({"msg": "User not found"}), 400
 
             if user.email_verified:
                 return jsonify({"msg": "Email is already verified"}), 400
 
             if not user.verify_code == code:
                 return jsonify({"msg": "Invalid verification code"}), 400
-            
             user.email_verified = True
+            return redirect(url_for('catch_all')), 200            
     except Exception as e:
         msg = "An Error ocurred: " + str(e)
         traceback.print_exc()
         return jsonify({"msg": msg}), 500
-    else:
-        return jsonify({"msg": "Success"}), 200
+        
 
 @app.route('/deleteUser', methods=['POST'])
 @jwt_required
