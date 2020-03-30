@@ -183,8 +183,19 @@ export default {
     },
 
     deleteItem (item) {
-      const index = this.allUsers.indexOf(item);
-      confirm('Are you sure you want to delete this User? ALL HER DATA WILL BE LOST') && this.allUsers.splice(index, 1);
+      if (confirm('Are you sure you want to delete this User? ALL HER DATA WILL BE LOST')) {
+        this.usrLoading = true;
+
+        axios.post('/deleteUser', {id: this.editedItem.id})
+        .then(() => {
+          const index = this.allUsers.indexOf(item);
+          this.allUsers.splice(index, 1);
+        })
+        .catch((error) => {
+          console.log(error);
+        })
+        .finally(() => this.usrLoading = false);
+      }
     },
 
     loadFromServer() {

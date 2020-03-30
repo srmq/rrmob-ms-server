@@ -299,6 +299,53 @@ def confirm_email():
     else:
         return jsonify({"msg": "Success"}), 200
 
+@app.route('/deleteUser', methods=['POST'])
+@jwt_required
+def delete_user():
+    if get_jwt_identity() != "root":
+        msg = "Unauthorized user"
+        log = logging.getLogger()
+        log.debug(msg)
+        return jsonify({"msg": msg}), 401
+
+    if not request.is_json:
+        msg = "Malformed request, expecting JSON"
+        log = logging.getLogger()
+        log.debug(msg)
+        return jsonify({"msg": msg}), 400
+
+    id = request.json.get('id', None)
+    if not id:
+        msg = "Missing id"
+        log = logging.getLogger()
+        log.debug(msg)
+        return jsonify({"msg": msg}), 400
+    
+    try:
+        with session_scope() as session:
+            invitee = db_get_Invitee_by_Id(id, session)
+            if not invitee:
+                msg = "Invitee not found"
+                log = logging.getLogger()
+                log.debug(msg)
+                return jsonify({"msg": msg}), 400
+            if invitee.registered_usr:
+                if invitee.registered_usr.spotify_auth:
+                    session.delete(invitee.registered_usr.spotify_auth)
+                session.delete(invitee.registered_usr)
+            session.delete(invitee)
+    except Exception as e:
+        msg = "An Error ocurred: " + str(e)
+        log = logging.getLogger()
+        log.debug(msg)
+        traceback.print_exc()
+        return jsonify({"msg": msg}), 500
+    else:
+        return jsonify({"msg": "Success"}), 200
+
+        
+
+
 @app.route('/updateUser', methods=['POST'])
 @jwt_required
 def update_user():
