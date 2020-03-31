@@ -10,7 +10,7 @@
             <div>Trying to log in with Spotify state. Please wait...
             </v-card-text>
             <v-card-text v-else>
-            <v-form v-model="valid" :lazy-validation="lazy">
+            <v-form v-model="valid" :lazy-validation="lazy" ref="form">
                 <span v-if="firstAccess">
                 <v-text-field
                 label="Nome"
@@ -121,32 +121,36 @@ export default {
       return true;
     },
     doSignIn() {
-      axios.post('/signin', {
-        email: this.email,
-        password: this.password
-      })
-      .then((response) => {
-        bus.$emit('loggedIn', {email: this.email, access_token: response.data.access_token});
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-    },
-    doEnter() {
-      if (this.firstAccess) {
-        axios.post('/signup', {
-          fullname: this.name,
-          emailaddr: this.email,
+      if(this.$refs.form.validate()) {
+        axios.post('/signin', {
+          email: this.email,
           password: this.password
         })
-        .then(() => {
-          this.doSignIn();
+        .then((response) => {
+          bus.$emit('loggedIn', {email: this.email, access_token: response.data.access_token});
         })
         .catch((error) => {
           console.log(error);
         });
-      } else {
-        this.doSignIn();
+      }
+    },
+    doEnter() {
+      if(this.$refs.form.validate()) {
+        if (this.firstAccess) {
+          axios.post('/signup', {
+            fullname: this.name,
+            emailaddr: this.email,
+            password: this.password
+          })
+          .then(() => {
+            this.doSignIn();
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+        } else {
+          this.doSignIn();
+        }
       }
     },
     submitIfEnter(event) {

@@ -7,7 +7,7 @@
             <v-toolbar-title>Recommender Effects</v-toolbar-title>
             </v-toolbar>
             <v-card-text>
-            <v-form v-on:submit.prevent v-model="valid" :lazy-validation="lazy">
+            <v-form v-on:submit.prevent v-model="valid" :lazy-validation="lazy" ref="form">
                 <v-text-field
                 id="password"
                 label="Root password"
@@ -49,7 +49,7 @@ export default {
   }),
   methods: {
     doRootSignIn() {
-      if (this.password.length > 0) {
+      if (this.$refs.form.validate()) {
         axios.post('/rootsignin', {
           rootpass: this.password
         })

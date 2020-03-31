@@ -16,7 +16,7 @@
               <div>Senha alterada com sucesso.</div>
             </v-card-text>
             <v-card-text v-else>
-            <v-form v-on:submit.prevent v-model="valid" :lazy-validation="lazy">
+            <v-form v-on:submit.prevent v-model="valid" :lazy-validation="lazy" ref="form">
                 <v-text-field
                 id="password"
                 label="Nova senha"
@@ -87,7 +87,7 @@ export default {
             return true;
         },
         sendChangePass() {
-            if (this.password.length > 5 && this.valid) {
+            if (this.$refs.form.validate()) {
                 this.changeSending = true;
                 axios.post('/newpass', {
                     email: this.email,

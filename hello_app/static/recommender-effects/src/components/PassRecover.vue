@@ -16,7 +16,7 @@
               <div>Se o e-mail informado estiver cadastrado no RecommenderEffects, você receberá nele uma mensagem com instruções para mudar a sua senha.</div>
             </v-card-text>
             <v-card-text v-else>
-            <v-form v-on:submit.prevent v-model="valid" :lazy-validation="lazy">
+            <v-form v-on:submit.prevent v-model="valid" :lazy-validation="lazy" ref="form">
                 <v-text-field
                 id="email"
                 label="E-mail cadastrado"
@@ -66,7 +66,7 @@ export default {
         bus.$emit('turnOffPassRecover');
     },
     sendEmail() {
-        if (this.email.indexOf('@') !== -1) {
+        if (this.$refs.form.validate()) {
           this.emailSending = true;
           this.emailSentError = false;
           axios.post('/passrecover', {
