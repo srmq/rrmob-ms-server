@@ -1,6 +1,7 @@
 from .dbclasses import Base, User, Invitee, GMailAuth, SpotifyAuth
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.dialects.postgresql import JSON
 
 import os
 from contextlib import contextmanager
@@ -98,6 +99,9 @@ def db_get_SpotifyAuth_by_state(state, session):
 
 def db_get_User_by_email(email, session):
     return session.query(User).filter(User.email == email).first()
+
+def db_get_Users_with_spotify_token(session):
+    return session.query(User).filter(User.auth_info != JSON.NULL, User.auth_info.isnot(None))
 
 def db_is_User_email_verified(email):
     result = False

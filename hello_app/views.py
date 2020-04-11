@@ -11,7 +11,7 @@ from .dbfuncs import (
     session_scope, db_get_GMailAuth, db_get_GMailAuth_by_state,
     db_get_User_by_email, db_get_SpotifyAuth_by_state,
     db_is_User_email_verified, db_get_AllInvitees,
-    db_get_Invitee_by_Id
+    db_get_Invitee_by_Id, db_get_Users_with_spotify_token
 )
 from .dbclasses import User, Invitee, GMailAuthSchema, SpotifyAuth
 from spotipy.oauth2 import SpotifyOAuth
@@ -584,11 +584,6 @@ def new_pass():
     else:
         return jsonify({"msg": "Success"}), 200
 
-
-
-
-
-
 @app.route('/signup', methods=['POST'])
 def signup():
     if not request.is_json:
@@ -658,9 +653,6 @@ def resend_confirmation_email():
         traceback.print_exc()
         return jsonify({"msg": msg}), 500
 
-
-
-
 def access_token_for_email(user_addr):
     try:
         with session_scope() as session:
@@ -697,6 +689,37 @@ def get_mySpotifyAcessToken():
         return jsonify({"msg": "Could not find user identity"}), 400
     else:
         return access_token_for_email(user_addr)
+
+@app.route('/getuserswithtoken', methods=['POST'])
+def get_users_with_token():
+    root_pass = os.environ.get('ROOT_PASS', '')
+    if not request.is_json:
+        return jsonify({"msg": "Malformed request, expecting JSON"}), 400
+
+    rcvd_pass = request.json.get('rootpass', None)
+    if not rcvd_pass:
+        return jsonify({"msg": "Missing root password parameter"}), 400
+    if not rcvd_pass == root_pass:
+        return jsonify({"msg": "Invalid root password received"}), 401
+
+    try:
+        with session_scope() as session:
+            users = []
+            dbUsers = db_get_Users_with_spotify_token(session)
+            for user in dbUsers:
+                users.append(
+                    {'fullname' : user.fullname,
+                     'email' : user.email
+                    }
+                )
+    except Exception as e:
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
+        return jsonify({"msg": msg}), 500
+    else:
+        return jsonify({'users' : users}), 200
+
+
 
 @app.route('/getspotifyauth', methods=['POST'])
 def get_SpotifyAuth():
