@@ -14,7 +14,7 @@ from .dbfuncs import (
     db_get_Invitee_by_Id, db_get_Users_with_spotify_token
 )
 from .dbclasses import User, Invitee, GMailAuthSchema, SpotifyAuth
-from spotipy.oauth2 import SpotifyOAuth
+from spotipy.oauth2 import SpotifyOAuth, SpotifyClientCredentials
 import os
 import os.path
 import uuid
@@ -653,6 +653,12 @@ def resend_confirmation_email():
         traceback.print_exc()
         return jsonify({"msg": msg}), 500
 
+def access_token_for_app():
+    credentials = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
+    accesstoken = credentials.get_access_token()
+    return accesstoken
+
+
 def access_token_for_email(user_addr):
     try:
         with session_scope() as session:
@@ -689,6 +695,25 @@ def get_mySpotifyAcessToken():
         return jsonify({"msg": "Could not find user identity"}), 400
     else:
         return access_token_for_email(user_addr)
+
+@app.route('/getappaccesstoken', methods=['POST'])        
+def get_app_accesstoken():
+    root_pass = os.environ.get('ROOT_PASS', '')
+    if not request.is_json:
+        return jsonify({"msg": "Malformed request, expecting JSON"}), 400
+
+    rcvd_pass = request.json.get('rootpass', None)
+    if not rcvd_pass:
+        return jsonify({"msg": "Missing root password parameter"}), 400
+    if not rcvd_pass == root_pass:
+        return jsonify({"msg": "Invalid root password received"}), 401
+    try:
+        access_token = access_token_for_app()
+        return jsonify({'access_token': access_token}), 200
+    except Exception as e:
+        msg = "An Error ocurred: " + str(e)
+        traceback.print_exc()
+        return jsonify({"msg": msg}), 500
 
 @app.route('/getuserswithtoken', methods=['POST'])
 def get_users_with_token():
