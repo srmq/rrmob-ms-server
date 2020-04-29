@@ -101,7 +101,7 @@ def db_get_User_by_email(email, session):
     return session.query(User).filter(User.email == email).first()
 
 def db_get_Users_with_spotify_token(session):
-    return session.query(User).join(User.spotify_auth).filter(User.spotify_auth != None, User.spotify_auth.token_info != JSON.NULL)
+    return session.query(User).join(SpotifyAuth).filter(User.spotify_auth != None, SpotifyAuth.token_info != JSON.NULL)
 
 def db_is_User_email_verified(email):
     result = False
